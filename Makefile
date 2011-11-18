@@ -30,9 +30,14 @@ $(ODIR):
 obj/main.o: src/main.cpp
 	$(CC) -c -o $@ $< $(INC)
 
-obj/bow.o: src/bow.cpp $(DEP)
+obj/util.o: src/util.cpp include/util.h
 	$(CC) -c -o $@ $< $(INC)
 
+obj/feature.o: src/feature.cpp include/feature.h include/util.h
+	$(CC) -c -o $@ $< $(INC)
+
+obj/book.o: src/book.cpp include/book.h include/feature.h include/util.h
+	$(CC) -c -o $@ $< $(INC) 
 
 echo:
 	@echo "src:" $(SRC)
