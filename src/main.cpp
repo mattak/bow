@@ -1,5 +1,6 @@
 #include <iostream>
 #include "feature.h"
+#include "book.h"
 
 using namespace std;
 
@@ -22,7 +23,8 @@ void load(const char* file){
 }
 
 int main(int argc, char** argv){
-	;
+	Feature f1;
+	Feature f2;
 	return 0;
 }
 
