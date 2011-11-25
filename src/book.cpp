@@ -2,6 +2,9 @@
 #include "book.h"
 #include "util.h"
 
+using namespace cv;
+using namespace std;
+
 Book::Book(){
   
 }
@@ -9,7 +12,7 @@ Book::~Book(){
 
 }
 
-void Book::makebook (int k) {
+int Book::makebook (int k, bool hierarchical) {
   Mat points;
   int rows=0, cols=0;
   for (int i=0;i<features.size();i++) {
@@ -28,17 +31,47 @@ void Book::makebook (int k) {
     }
   }
   Mat label;
-  // for
-  kmeans(
-    points,
-    k,
-    label,
-    cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
-    1,
-    KMEANS_PP_CENTERS,
-    book
-  );
-  
+	int resk = 1;
+	// for
+	if (hierarchical) {
+	}
+	else {
+	}
+		kmeans(
+			points,
+			k,
+			label,
+			cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
+			1,
+			KMEANS_PP_CENTERS,
+			book
+		);
+		resk = k;
+	return k;
+}
+
+void Book::maketree (int type) {
+	/*
+	cv::flann::IndexParams params;
+	switch (type) {
+		case TYPE_KDTREE:
+			params = cv::flann::KDTreeIndexParams();
+			break;
+		case TYPE_KMTREE:
+			params = cv::flann::KMeansIndexParams();
+			break;
+		case TYPE_LLTREE:
+			params = cv::flann::LinearIndexParams();
+			break;
+		default:
+			params = cv::flann::KDTreeIndexParams();
+			break;
+	}
+	*/
+	cout << "param setted" << endl;
+	cv::flann::KDTreeIndexParams kd;
+	tree = cv::flann::Index(book, kd);
+	cout << "tree created" << endl;
 }
 
 void Book::add (const char *file, bool bin) {
@@ -80,21 +113,38 @@ void Book::add (Feature& f) {
   features.push_back(f);
 }
 
-void Book::save (const char* file) {
-  ofstream ofs;
-  ofs.open(file, ios::out);
-  write(ofs);
-  ofs.close();
+void Book::save (const char* bookfile, const char* treefile) {
+	cout << "tree string" << endl;
+	cout << "try tree saving:" << treefile << endl;
+	tree.save(treefile);
+	cout << "try save book" << endl;
+	save_book(bookfile);
+	cout << "end saving" << endl;
 }
 
-void Book::load (const char* file) {
+void Book::load (const char* bookfile, const char* treefile) {
+	string treestring(treefile);
+	load_book(bookfile);
+	tree.load(book,treestring);
+}
+
+void Book::save_book (const char* file) {
+  cout << "saved_book start" << endl;
+  ofstream ofs;
+  ofs.open(file, ios::out);
+  write_book(ofs);
+  ofs.close();
+  cout << "saved_book end" << endl;
+}
+
+void Book::load_book (const char* file) {
   ifstream ifs;
   ifs.open(file, ios::in);
-  read(ifs);
+  read_book(ifs);
   ifs.close();
 }
 
-void Book::write (ofstream& ofs) {
+void Book::write_book (ofstream& ofs) {
   ofs << "^" << endl;
   ofs << "type book" << endl;
   ofs << "feature " << features.at(0).type << endl;
@@ -109,7 +159,7 @@ void Book::write (ofstream& ofs) {
   }
 }
 
-void Book::read (ifstream& ifs) {
+void Book::read_book (ifstream& ifs) {
   int y=0, x=0;
   bool header = false;
   string line;

@@ -1,6 +1,7 @@
 #!/bin/make
 CC    = cv++
 INC   = -I./include
+OPS   = -g
 
 IDIR=./include
 SDIR=src
@@ -28,16 +29,16 @@ $(ODIR):
 	mkdir $(ODIR)
 
 obj/main.o: src/main.cpp
-	$(CC) -c -o $@ $< $(INC)
+	$(CC) -c -o $@ $< $(INC) $(OPS)
 
 obj/util.o: src/util.cpp include/util.h
-	$(CC) -c -o $@ $< $(INC)
+	$(CC) -c -o $@ $< $(INC) $(OPS)
 
 obj/feature.o: src/feature.cpp include/feature.h include/util.h
-	$(CC) -c -o $@ $< $(INC)
+	$(CC) -c -o $@ $< $(INC) $(OPS)
 
 obj/book.o: src/book.cpp include/book.h include/feature.h include/util.h
-	$(CC) -c -o $@ $< $(INC) 
+	$(CC) -c -o $@ $< $(INC) $(OPS)
 
 echo:
 	@echo "src:" $(SRC)
