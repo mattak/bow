@@ -22,22 +22,35 @@ public:
   
 	vector<Feature> features;
 	Mat book;
-	cv::flann::Index tree;
+//	cv::flann::Index tree;
   
   int  makebook(int k, const bool hierarchical=false);
-  void maketree(int type);
+//  void maketree(int type);
+
+	void getword(const Feature &f, Mat& dst_word);
+	void getword(const Mat& src, Mat& dst_word);
 
   void add (const char *file, const bool bin=false);
   void add (Feature& f);
 
-  void save (const char *bookfile, const char* treefile);
-  void load (const char *bookfile, const char* treefile);
+//  void save (const char *bookfile, const char* treefile);
+//  void load (const char *bookfile, const char* treefile);
 
-  void save_book (const char *file);
+  void save_book (const char *file, const bool bin=true);
   void load_book (const char *file);
 
-  void write_book (ofstream& ofs);
+  void write_book (ofstream& ofs, const bool bin=true);
   void read_book (ifstream& ifs);
+	
+	friend ostream& operator <<(ostream& ros, Book manipulator) {
+		return manipulator(ros);
+	}
+
+private:
+	ostream& operator()(ostream& ros) {
+		ros << "[row,col]=[" << book.rows << "," << book.cols << "]" << endl;
+		return ros;
+	}
 };
 
 #endif

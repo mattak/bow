@@ -26,40 +26,63 @@ void load(const char* file){
   f.show();
 }
 
+void test_book_saveload(Feature& f1, Feature& f2) {
+	Book book;
+	book.add(f1);
+	book.add(f2);
+	book.makebook(100);
+	book.save_book("tmp_test.book");
+	
+	Book lbook;
+	lbook.load_book("tmp_test.book");
+	cout << "sbook" << (book.book.at<float>(book.book.rows-1,book.book.cols-1)) << endl;
+	cout << "lbook" << (lbook.book.at<float>(lbook.book.rows-1,lbook.book.cols-1)) << endl;
+}
+
+void test_index_saveload(Feature& f1, Feature& f2) {
+	Book book;
+	book.add(f1);
+	book.add(f2);
+	book.makebook(100);
+	// save
+	flann::KDTreeIndexParams kdp;
+	flann::Index sidx(book.book, kdp);
+	sidx.save("tmp_test.idx");
+	
+	// load
+	flann::Index lidx;//(book.book,kdp);
+	lidx.load(book.book, "tmp_test.idx");
+	
+	// test
+	Mat query = Mat::ones(1,book.book.cols,CV_32FC1);
+	flann::SearchParams searchparams;
+	Mat sindices;
+	Mat sdists;
+	sidx.knnSearch(query, sindices, sdists, 10, searchparams);
+	cout << "before indices:" << sindices << endl;
+	cout << "before dists  :" << sdists << endl;
+	Mat lindices;
+	Mat ldists;
+	lidx.knnSearch(query, lindices, ldists, 10, searchparams);
+	cout << "after indices:" << lindices << endl;
+	cout << "after dists  :" << ldists << endl;
+  cout << "book:" << book << endl;
+}
+
+
+// feature -> book
+// book -> words
+// 
 int main(int argc, char** argv){
 	Feature f1;
 	Feature f2;
 
-	f1.extract("surf", "/home/maruya-t/git/bow/72.jpg");
-	f2.extract("surf", "/home/maruya-t/git/bow/72m.jpg");
+	f1.extract("surf", "/home/maruya-t/git/bow/67.jpg");
+	f2.extract("surf", "/home/maruya-t/git/bow/67m.jpg");
+	
+	// test_book_saveload(f1,f2);
+	test_index_saveload(f1,f2);
 
-	Book book;
-	book.add(f1);
-	book.add(f2);
-	cout << "added" << endl;
-	
-	book.makebook(100);
-	cout << "makebook" << endl;
-	cout << book.book.rows << "," << book.book.cols << endl;
-	book.maketree(TYPE_KDTREE);
-	cout << "maketree" << endl;
-	flann::KDTreeIndexParams ip;
-	flann::Index idx(book.book, ip);
-	idx.save("tmp.tree");
-	cout << "tree saved" << endl;
-	book.save_book("tmp.book");
-	cout << "saved" << endl;
-	
-	Mat indices;
-	Mat dists;
-	flann::SearchParams p;
-	book.tree.knnSearch(book.book, indices, dists, 10, p );
-	
-	Book loadbook;
-	loadbook.load_book("tmp.book");
-	loadbook.tree.load(loadbook.book, "tmp.tree");
-	//loadbook.load("tmp.book", "tmp.tree");
-	
 	return 0;
 }
 

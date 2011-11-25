@@ -49,9 +49,8 @@ int Book::makebook (int k, bool hierarchical) {
 		resk = k;
 	return k;
 }
-
+/*
 void Book::maketree (int type) {
-	/*
 	cv::flann::IndexParams params;
 	switch (type) {
 		case TYPE_KDTREE:
@@ -67,11 +66,21 @@ void Book::maketree (int type) {
 			params = cv::flann::KDTreeIndexParams();
 			break;
 	}
-	*/
 	cout << "param setted" << endl;
 	cv::flann::KDTreeIndexParams kd;
 	tree = cv::flann::Index(book, kd);
 	cout << "tree created" << endl;
+}
+*/
+
+void getword (const Feature& f, Mat& dst_word) {
+	getword( f.descriptor, dst_word );
+}
+
+void getword (const Mat& src, Mat& dst_word) {
+	KDTreeIndexParams params;
+	flann::Index idx(src, params);
+// next one 
 }
 
 void Book::add (const char *file, bool bin) {
@@ -113,6 +122,7 @@ void Book::add (Feature& f) {
   features.push_back(f);
 }
 
+/*
 void Book::save (const char* bookfile, const char* treefile) {
 	cout << "tree string" << endl;
 	cout << "try tree saving:" << treefile << endl;
@@ -127,71 +137,110 @@ void Book::load (const char* bookfile, const char* treefile) {
 	load_book(bookfile);
 	tree.load(book,treestring);
 }
+*/
 
-void Book::save_book (const char* file) {
-  cout << "saved_book start" << endl;
+void Book::save_book (const char* file, const bool bin) {
   ofstream ofs;
-  ofs.open(file, ios::out);
-  write_book(ofs);
+	if (bin) {
+		ofs.open(file, ios::out | ios::binary);
+	}
+	else {
+		ofs.open(file, ios::out);
+	}
+  write_book(ofs, bin);
   ofs.close();
-  cout << "saved_book end" << endl;
 }
 
 void Book::load_book (const char* file) {
   ifstream ifs;
-  ifs.open(file, ios::in);
+	ifs.open(file, ios::in | ios::binary);
   read_book(ifs);
   ifs.close();
 }
 
-void Book::write_book (ofstream& ofs) {
+void Book::write_book (ofstream& ofs, const bool bin) {
   ofs << "^" << endl;
   ofs << "type book" << endl;
   ofs << "feature " << features.at(0).type << endl;
   ofs << "size " << book.rows << " " << book.cols << endl;
+	ofs << "binary " << bin << endl;
   ofs << "$" << endl;
-  for (int y=0; y<book.rows; y++) {
-    ofs << book.at<float>(y,0);
-    for (int x=1; x<book.cols; x++) {
-      ofs << " " << book.at<float>(y,x);
-    }
-    ofs << endl;
-  }
+  if (bin) {
+		for (int y=0; y<book.rows; y++) {
+			for (int x=0; x<book.cols; x++) {
+				float f = book.at<float>(y,x);
+				ofs.write((char *)&f, sizeof(float));
+			}
+		}
+	}
+	else {
+		for (int y=0; y<book.rows; y++) {
+			ofs << book.at<float>(y,0);
+			for (int x=1; x<book.cols; x++) {
+				ofs << " " << book.at<float>(y,x);
+			}
+			ofs << endl;
+		}
+	}
 }
 
 void Book::read_book (ifstream& ifs) {
   int y=0, x=0;
   bool header = false;
-  string line;
-  while (ifs && getline(ifs,line)) {
-    if (line == "^") {
-      header = true;
-      continue;
-    }
-    else if(line == "$") {
-      header = false;
-      continue;
-    }
-    if (header) {
-      vector<string> strs = split(line, " ");
-      string tag = strs.at(0);
-      if (tag=="type") {
-        ;//type = strs.at(1);
-      }
-      else if (tag=="size") {
-        int rows = atoi(strs.at(1).c_str());
-        int cols = atoi(strs.at(2).c_str());
-        book = Mat::zeros(rows,cols,CV_32FC1);
-      }
-    }
-    else {
-      vector<string> strs = split(line, " ");
-      for (int x=0;x<strs.size();x++) {
-        float f = atof(strs.at(x).c_str());
-				book.at<float>(y,x) = f;
-      }
-      y++;
-    }
-  }
+	bool readbinary = false;
+	{
+		string line;
+		while (ifs && getline(ifs,line)) {
+			if (line == "^") {
+				header = true;
+				continue;
+			}
+			else if(line == "$") {
+				header = false;
+				if (readbinary) {
+					for (int y=0;y<book.rows;y++) {
+						for (int x=0;x<book.cols;x++) {
+							float f;
+							ifs.read((char *)&f, sizeof(float));
+							book.at<float>(y,x) = f;
+						}
+					}
+					break;
+				}
+				else {
+					continue;
+				}
+			}
+			if (header) {
+				vector<string> strs = split(line, " ");
+				string tag = strs.at(0);
+				if (tag=="type") {
+					;//type = strs.at(1);
+				}
+				else if (tag=="size") {
+					int rows = atoi(strs.at(1).c_str());
+					int cols = atoi(strs.at(2).c_str());
+					book = Mat::zeros(rows,cols,CV_32FC1);
+				}
+				else if (tag=="binary") {
+					if (strs.at(1)=="1") {
+						readbinary = true;
+					}
+					else {
+						readbinary = false;
+					}
+					cout << "loadbin? " << readbinary << endl;
+				}
+			}
+			else {
+				vector<string> strs = split(line, " ");
+				for (int x=0;x<strs.size();x++) {
+					float f = atof(strs.at(x).c_str());
+					book.at<float>(y,x) = f;
+				}
+				y++;
+			}
+		}
+	}
 }
 
