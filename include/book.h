@@ -27,8 +27,10 @@ public:
   int  makebook(int k, const bool hierarchical=false);
 //  void maketree(int type);
 
-	void getword(const Feature &f, Mat& dst_word);
-	void getword(const Mat& src, Mat& dst_word);
+	void getword(Feature &f, Mat& dst_word, flann::Index& idx, const int knn=3);
+	void getword(Mat& src, Mat& dst_word, flann::Index& idx, const int knn=3);
+
+	void getwords (vector<Feature>& fs, Mat& dst_words, const int knn=3);
 
   void add (const char *file, const bool bin=false);
   void add (Feature& f);

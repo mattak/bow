@@ -1,9 +1,12 @@
-
+#include <cv.h>
+#include <cxcore.h>
 #include <vector>
 #include <string>
 #include "util.h"
 
+using namespace cv;
 using namespace std;
+
 // private
 vector<string> split(string str, string delim) {
   vector<string> result;
@@ -18,5 +21,15 @@ vector<string> split(string str, string delim) {
     result.push_back(str);
   }
   return result;
+}
+
+void put_as_libsvm (int label, const Mat& mat) {
+	for (int y=0;y<mat.rows;y++) {
+		cout << label;
+		for (int x=0;x<mat.cols;x++) {
+			cout << " " << x << ":" << mat.at<float>(y,x);
+		}
+		cout << endl;
+	}
 }
 

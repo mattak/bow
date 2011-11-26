@@ -73,14 +73,47 @@ void Book::maketree (int type) {
 }
 */
 
-void getword (const Feature& f, Mat& dst_word) {
-	getword( f.descriptor, dst_word );
+void Book::getword (Feature& f, Mat& dst_word, flann::Index& idx, const int knn) {
+	getword(f.descriptor, dst_word, idx, knn);
 }
 
-void getword (const Mat& src, Mat& dst_word) {
-	KDTreeIndexParams params;
-	flann::Index idx(src, params);
-// next one 
+void Book::getword (Mat& src, Mat& dst_word, flann::Index& idx, const int knn) {
+	Mat indices;
+	Mat dists;
+	flann::SearchParams s;
+	idx.knnSearch(src, indices, dists, knn, s);
+	dst_word = Mat::zeros(1, book.rows, CV_32FC1);
+	Mat vote = Mat::zeros(1, book.rows, CV_32SC1);
+	for (int i=0;i<indices.rows;i++) {
+		for (int j=0;j<indices.cols;j++) {
+			int p = indices.at<int>(i,j);
+			vote.at<int>(0,p) += 1;
+		}
+	}
+	
+	long long sum = 0;
+	for (int i=0;i<vote.cols;i++) {
+		sum += vote.at<int>(0,i);
+	}
+	
+	for (int i=0;i<dst_word.cols;i++) {
+		dst_word.at<float>(0,i) = (float)(vote.at<int>(0,i))/sum;
+	}
+}
+
+void Book::getwords (vector<Feature>& fs, Mat& dst_words, const int knn) {
+	dst_words = Mat::zeros(fs.size(), book.rows, CV_32FC1);
+
+	flann::KDTreeIndexParams kdp;
+	flann::Index idx(book,kdp);
+
+	for (int i=0;i<fs.size();i++) {
+		Mat dst;
+		getword(fs.at(i).descriptor, dst, idx, knn);
+		for (int x=0; x<dst.cols; x++) {
+			dst_words.at<float>(i,x) = dst.at<float>(0,x);
+		}
+	}
 }
 
 void Book::add (const char *file, bool bin) {

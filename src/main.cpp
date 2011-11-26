@@ -4,6 +4,7 @@
 #include <fstream>
 #include "feature.h"
 #include "book.h"
+#include "util.h"
 
 using namespace std;
 using namespace cv;
@@ -69,6 +70,28 @@ void test_index_saveload(Feature& f1, Feature& f2) {
   cout << "book:" << book << endl;
 }
 
+void test_words (Feature& f1, Feature& f2) {
+	Book book;
+	book.add(f1);
+	book.add(f2);
+	book.makebook(10);
+	
+	flann::KDTreeIndexParams kdparams;
+	flann::Index idx(book.book, kdparams);
+
+	Mat dst;
+	book.getword(f1, dst, idx, 3);
+	cout << dst << endl;
+	book.getword(f2, dst, idx, 3);
+	cout << dst << endl;
+
+	Mat dsts;
+	vector<Feature> fs;
+	fs.push_back(f1); fs.push_back(f2);
+
+	book.getwords(fs, dsts, 3);
+	put_as_libsvm(1, dsts);
+}
 
 // feature -> book
 // book -> words
@@ -81,8 +104,9 @@ int main(int argc, char** argv){
 	f2.extract("surf", "/home/maruya-t/git/bow/67m.jpg");
 	
 	// test_book_saveload(f1,f2);
-	test_index_saveload(f1,f2);
-
+	// test_index_saveload(f1,f2);
+	test_words(f1, f2);
+	
 	return 0;
 }
 
