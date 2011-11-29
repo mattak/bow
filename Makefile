@@ -12,24 +12,30 @@ DEP  = $(patsubst %,$(IDIR)/%,$(_DEP))
 _SRC = $(shell ls src)
 SRC  = $(patsubst %,$(SDIR)/%,$(_SRC))
 _OBJ = $(subst .cpp,.o,$(_SRC))
-OBJ  = $(patsubst %,$(ODIR)/%,$(_OBJ))
-TARGET = desc
+OBJ  = obj/feature.o obj/book.o obj/util.o #$(patsubst %,$(ODIR)/%,$(_OBJ))
+TARGET = desc main bk
 
 #$(ODIR)/%.o: %.cpp $(DEP) 
 #	$(CC) -c -o $@ $< $(INC)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	$(CC) -o $@ $^ $(INC)
+#$(TARGET): $(OBJ)
+#	$(CC) -o $@ $^ $(INC)
+desc: src/desc.cpp $(OBJ)
+	$(CC) -o $@ $^ $(INC) $(OPS)
+main: src/main.cpp $(OBJ)
+	$(CC) -o $@ $^ $(INC) $(OPS)
+bk: src/bk.cpp $(OBJ)
+	$(CC) -o $@ $^ $(INC) $(OPS)
 
 $(OBJ): | $(ODIR)
 
 $(ODIR):
 	mkdir $(ODIR)
 
-obj/main.o: src/main.cpp
-	$(CC) -c -o $@ $< $(INC) $(OPS)
+#obj/main.o: src/main.cpp
+#	$(CC) -c -o $@ $< $(INC) $(OPS)
 
 obj/util.o: src/util.cpp include/util.h
 	$(CC) -c -o $@ $< $(INC) $(OPS)

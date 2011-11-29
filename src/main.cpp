@@ -9,7 +9,7 @@
 using namespace std;
 using namespace cv;
 
-void save(const char *file){
+void save (const char *file) {
   Feature f;
   f.add_grid(20,20,10);
   //f.extract("surf", `any jpg`);
@@ -19,7 +19,7 @@ void save(const char *file){
   f.show();
 }
 
-void load(const char* file){
+void load (const char* file) {
   Feature f;
   f.load(file);
   cout << "last:" << f.descriptor.at<float>(f.descriptor.rows-1,f.descriptor.cols-1) << endl;
@@ -27,7 +27,7 @@ void load(const char* file){
   f.show();
 }
 
-void test_book_saveload(Feature& f1, Feature& f2) {
+void test_book_saveload (Feature& f1, Feature& f2) {
 	Book book;
 	book.add(f1);
 	book.add(f2);
@@ -40,7 +40,7 @@ void test_book_saveload(Feature& f1, Feature& f2) {
 	cout << "lbook" << (lbook.book.at<float>(lbook.book.rows-1,lbook.book.cols-1)) << endl;
 }
 
-void test_index_saveload(Feature& f1, Feature& f2) {
+void test_index_saveload (Feature& f1, Feature& f2) {
 	Book book;
 	book.add(f1);
 	book.add(f2);
@@ -96,17 +96,29 @@ void test_words (Feature& f1, Feature& f2) {
 // feature -> book
 // book -> words
 // 
-int main(int argc, char** argv){
+int main (int argc, char** argv) {
 	Feature f1;
 	Feature f2;
 
-	f1.extract("surf", "/home/maruya-t/git/bow/67.jpg");
-	f2.extract("surf", "/home/maruya-t/git/bow/67m.jpg");
+	f1.extract("orb", "/home/maruya-t/git/bow/67.jpg");
+	//f2.extract("surf", "/home/maruya-t/git/bow/67m.jpg");
 	
 	// test_book_saveload(f1,f2);
 	// test_index_saveload(f1,f2);
-	test_words(f1, f2);
+	//test_words(f1, f2);
 	
+	cout << "c,r:" << f1.descriptor.cols << "," << f1.descriptor.rows << endl;
+	cout << "flags:" << f1.descriptor.flags << endl;
+	cout << "depth:" << f1.descriptor.depth() << endl;
+	cout << "type:"  << f1.descriptor.type() << endl;
+	cout << "CV_8U:" << CV_8U << endl;
+	cout << "CV_8S:" << CV_8S << endl;
+	cout << "CV_16U:" << CV_16U << endl;
+	cout << "CV_16S:" << CV_16S << endl;
+	cout << "CV_32S:" << CV_32S << endl;
+	cout << "CV_32F:" << CV_32F << endl;
+	cout << "CV_64F:" << CV_64F << endl;
+	cout << "CV_8UC1:" << CV_8UC1 << endl;
 	return 0;
 }
 

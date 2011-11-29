@@ -11,6 +11,7 @@
 
 #define FEATURE_TYPE_SURF "surf"
 #define FEATURE_TYPE_SIFT "sift"
+#define FEATURE_TYPE_ORB  "orb"
 
 using namespace std;
 using namespace cv;
@@ -37,8 +38,8 @@ public:
 	void show();
 
 	// io
-	void save(const char* file,const bool bin=false);
-	void load(const char* file,const bool bin=false);
+	void save(const char* file,const bool bin=true);
+	void load(const char* file,const bool bin=true);
 	void write(ofstream& ofs);
 	void read(ifstream& ifs);
 

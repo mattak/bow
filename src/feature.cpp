@@ -44,11 +44,19 @@ void Feature::extract (const char *_type, const char *_imgfile) {
 		extractor = new SiftDescriptorExtractor();
 		detector->detect(img, keypoint);
 	}
+	else if (type == "orb") {
+		detector = new OrbFeatureDetector(1000);
+		extractor = new OrbDescriptorExtractor();
+		detector->detect(img, keypoint);
+	}
 	else if (type == "gsurf") {
 		extractor = new SurfDescriptorExtractor();
 	}
 	else if (type == "gsift") {
 		extractor = new SiftDescriptorExtractor();
+	}
+	else if (type == "gorb") {
+		extractor = new OrbDescriptorExtractor();
 	}
 	else {
 		cerr << "unknown type of descriptor" << endl;
@@ -158,9 +166,24 @@ void Feature::read (ifstream& ifs) {
 			angle = (float)atof(strs.at(3).c_str());
 			KeyPoint kp(px,py,scale,angle);
 			keypoint.push_back(kp);
-			for (int x=4;x<strs.size();x++) {
-				float f = atof(strs.at(x).c_str());
-				descriptor.at<float>(y,x-4) = f;
+			if (type=="orb" || type=="gorb") {
+				const char *vals = strs.at(4).c_str();
+				for (int x=0;x<descriptor.cols;x++) {
+					uchar c = 0;
+					for (int p=0;p<8;p++) {
+						c = c << 1;
+						if (vals[x*8+p] == '1') {
+							c += 1;
+						}
+					}
+					descriptor.at<uchar>(y,x) = c;
+				}
+			}
+			else {
+				for (int x=4;x<strs.size();x++) {
+					float f = atof(strs.at(x).c_str());
+					descriptor.at<float>(y,x-4) = f;
+				}
 			}
 			y++;
 		}
@@ -177,8 +200,20 @@ void Feature::write (ofstream& ofs) {
 		KeyPoint kp = keypoint.at(y);
 		ofs << kp.pt.x << " " << kp.pt.y << " ";
 		ofs << kp.size << " " << kp.angle;
-		for (int x=0; x<descriptor.cols; x++) {
-			ofs << " " << descriptor.at<float>(y,x);
+		if (type=="orb" || type=="gorb") {
+			ofs << " ";
+			for (int x=0; x<descriptor.cols; x++) {
+				uchar c = descriptor.at<uchar>(y,x);
+				for (int p=0;p<8;p++) {
+					int v = (c >> p) & 0x01;
+					ofs << v;
+				}
+			}
+		}
+		else {
+			for (int x=0; x<descriptor.cols; x++) {
+				ofs << " " << descriptor.at<float>(y,x);
+			}
 		}
 		ofs << endl;
 	}
@@ -211,6 +246,7 @@ void Feature::bread (ifstream& ifs) {
 			loadfile = strs.at(1);
 		}
 	}
+	
 	for (int y=0;y<descriptor.rows;y++) {
 		float px, py, scale, angle;
 		ifs.read((char*)&px,sizeof(float));
@@ -219,10 +255,19 @@ void Feature::bread (ifstream& ifs) {
 		ifs.read((char*)&angle,sizeof(float));
 		KeyPoint kp(px,py,scale,angle);
 		keypoint.push_back(kp);
-		for (int x=0;x<descriptor.cols;x++) {
-			float d;
-			ifs.read((char*)&d, sizeof(float));
-			descriptor.at<float>(y,x) = d;
+		if (type=="orb" || type=="gorb") {
+			for (int x=0; x<descriptor.cols; x++) {
+				uchar d;
+				ifs.read((char*)&d, sizeof(unsigned char));
+				descriptor.at<uchar>(y,x) = d;
+			}
+		}
+		else {
+			for (int x=0; x<descriptor.cols; x++) {
+				float d;
+				ifs.read((char*)&d, sizeof(float));
+				descriptor.at<float>(y,x) = d;
+			}
 		}
 	}
 }
@@ -230,10 +275,10 @@ void Feature::bread (ifstream& ifs) {
 void Feature::bwrite (ofstream& ofs) {
 	stringstream sstr;
 	sstr << "^" << endl;
-    sstr << "type " << type << endl;
-    sstr << "size " << descriptor.rows << " " << descriptor.cols << endl;
-    sstr << "loadfile " << loadfile << endl;
-    sstr << "$" << endl;
+  sstr << "type " << type << endl;
+  sstr << "size " << descriptor.rows << " " << descriptor.cols << endl;
+  sstr << "loadfile " << loadfile << endl;
+  sstr << "$" << endl;
 	string str = sstr.str();
 	const char *header = str.c_str();
 	for(int i=0;i<str.size();i++){
@@ -250,9 +295,18 @@ void Feature::bwrite (ofstream& ofs) {
 		ofs.write((char*)&py,sizeof(float));
 		ofs.write((char*)&size,sizeof(float));
 		ofs.write((char*)&angle,sizeof(float));
-		for(int x=0;x<descriptor.cols;x++) {
-			float d = descriptor.at<float>(y,x);
-			ofs.write((char*)&d, sizeof(float));
+		if (type=="orb" || type=="gorb") {
+			// binary output
+			for (int x=0; x<descriptor.cols; x++) {
+				uchar c = descriptor.at<uchar>(y,x);
+				ofs.write((char*)&c, sizeof(unsigned char));
+			}
+		}
+		else {
+			for (int x=0; x<descriptor.cols; x++) {
+				float d = descriptor.at<float>(y,x);
+				ofs.write((char*)&d, sizeof(float));
+			}
 		}
 	}
 }
