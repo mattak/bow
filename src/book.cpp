@@ -8,73 +8,79 @@ using namespace std;
 Book::Book(){
   
 }
+
 Book::~Book(){
 
 }
 
 int Book::makebook (int k, bool hierarchical) {
-  Mat points;
+ 	Feature::DataType dt;
+	try {
+		if (features.size()<1) {
+			throw "there is not features in vector.";
+		}
+		dt = features.at(0).data_type();
+		for (int i=1;i<features.size();i++) {
+			if (dt!=features.at(i).data_type()) {
+				throw "feature type is not consistent in feature vector.";
+			}
+		}
+	}
+	catch (const char *str) {
+		cerr << "error: " << str << endl;
+		exit(1);
+	}
+	
+	Mat points;
   int rows=0, cols=0;
   for (int i=0;i<features.size();i++) {
     rows += features.at(i).descriptor.rows;
     cols = features.at(i).descriptor.cols;
   }
+  	
+	if (dt==Feature::UCHAR) {
+		points = Mat::zeros(rows,cols*8,CV_32FC1);
+	}
+	else {
+		points = Mat::zeros(rows,cols,CV_32FC1);
+	}
   
-  points = Mat::zeros(rows,cols,CV_32FC1);
   int sy = 0;
   for (int i=0;i<features.size();i++) {
     Feature f = features.at(i);
-    for (int y=0;y<f.descriptor.rows;y++,sy++) {
-      for (int x=0;x<f.descriptor.cols;x++) {
-        points.at<float>(sy,x) = f.descriptor.at<float>(y,x);
-      }
-    }
+		Mat tmp = f.floated_descriptor();
+		for (int y=0;y<tmp.rows;y++,sy++) {
+			for (int x=0;x<tmp.cols;x++) {
+				points.at<float>(sy,x) = tmp.at<float>(y,x);
+			}
+		}
   }
+
   Mat label;
 	int resk = 1;
-	// for
-	if (hierarchical) {
-	}
-	else {
-	}
-		kmeans(
-			points,
-			k,
-			label,
-			cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
-			1,
-			KMEANS_PP_CENTERS,
-			book
-		);
-		resk = k;
+	if (hierarchical) {}
+	else {}
+	kmeans(
+		points,
+		k,
+		label,
+		cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
+		1,
+		KMEANS_PP_CENTERS,
+		book
+	);
+	resk = k;
 	return k;
 }
-/*
-void Book::maketree (int type) {
-	cv::flann::IndexParams params;
-	switch (type) {
-		case TYPE_KDTREE:
-			params = cv::flann::KDTreeIndexParams();
-			break;
-		case TYPE_KMTREE:
-			params = cv::flann::KMeansIndexParams();
-			break;
-		case TYPE_LLTREE:
-			params = cv::flann::LinearIndexParams();
-			break;
-		default:
-			params = cv::flann::KDTreeIndexParams();
-			break;
-	}
-	cout << "param setted" << endl;
-	cv::flann::KDTreeIndexParams kd;
-	tree = cv::flann::Index(book, kd);
-	cout << "tree created" << endl;
-}
-*/
 
 void Book::getword (Feature& f, Mat& dst_word, flann::Index& idx, const int knn) {
-	getword(f.descriptor, dst_word, idx, knn);
+	if (f.data_type()==Feature::UCHAR) {
+		Mat tmp = f.floated_descriptor();
+		getword(tmp, dst_word, idx, knn);
+	}
+	else {
+		getword(f.descriptor, dst_word, idx, knn);
+	}
 }
 
 void Book::getword (Mat& src, Mat& dst_word, flann::Index& idx, const int knn) {
@@ -109,46 +115,42 @@ void Book::getwords (vector<Feature>& fs, Mat& dst_words, const int knn) {
 
 	for (int i=0;i<fs.size();i++) {
 		Mat dst;
-		getword(fs.at(i).descriptor, dst, idx, knn);
+		getword(fs.at(i), dst, idx, knn);
 		for (int x=0; x<dst.cols; x++) {
 			dst_words.at<float>(i,x) = dst.at<float>(0,x);
 		}
 	}
 }
 
-void Book::add (const char *file, bool bin) {
+void Book::getwords (const char *file, Mat& dst_words, const int knn) {
+	vector<Feature> fs;
+	ifstream ifs;
+	ifs.open(file, ios::in|ios::binary);
+	while (ifs) {
+		Feature f;
+		if (f.read(ifs)) {
+			fs.push_back(f);
+		}
+	}
+	ifs.close();
+	cerr << "feature load success : " << fs.size() << endl;
+	for (int i=0;i<fs.size();i++) {
+		cerr << fs.at(i) << endl;
+	}
+	getwords(fs, dst_words, knn);
+}
+
+void Book::add (const char *file) {
   Feature f;
   ifstream ifs;
-  char c;
-  if (bin) {
-    ifs.open(file, ios::in|ios::binary);
-    while(true){
-      ifs.read((char*)&c, sizeof(char));
-      if (c=='^') {
-        Feature f;
-        f.bread(ifs);
-        features.push_back(f);
-      }
-      else {
-        break;
-      }
-    }
+	ifs.open(file, ios::in|ios::binary);
+  while (ifs) {
+    Feature f;
+    if (f.read(ifs)) {
+			features.push_back(f);
+		}
   }
-  else {
-    ifs.open(file, ios::in);
-    while (true) {
-      ifs.read((char*)&c, sizeof(char));
-      if (c=='^') {
-        Feature f;
-        f.read(ifs);
-        features.push_back(f);
-      }
-      else {
-        break;
-      }
-    }
-  }
-  
+	ifs.close();
 }
 
 void Book::add (Feature& f) {

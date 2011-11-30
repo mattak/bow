@@ -7,3 +7,8 @@ status
 - now developing
 - descriptor implemented
 
+todo
+====
+- libsvm output for standard stream
+- get words for orb
+

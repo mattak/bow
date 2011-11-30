@@ -90,13 +90,30 @@ void test_words (Feature& f1, Feature& f2) {
 	fs.push_back(f1); fs.push_back(f2);
 
 	book.getwords(fs, dsts, 3);
-	put_as_libsvm(1, dsts);
+	put_as_libsvm(1, dsts, cout);
+}
+
+void test_book_multi_load (const char* file) {
+	Book book;
+	book.add(file);
+	for (int i=0;i<book.features.size();i++) {
+		book.features.at(i).show();
+	}
 }
 
 // feature -> book
 // book -> words
 // 
 int main (int argc, char** argv) {
+	if (argc>1) {
+		test_book_multi_load(argv[1]);
+	}
+	else {
+		cerr << "usage <multi book file>" << endl;
+		exit(0);
+	}
+	return 0;
+	/*
 	Feature f1;
 	Feature f2;
 
@@ -120,5 +137,6 @@ int main (int argc, char** argv) {
 	cout << "CV_64F:" << CV_64F << endl;
 	cout << "CV_8UC1:" << CV_8UC1 << endl;
 	return 0;
+	*/
 }
 

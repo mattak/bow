@@ -23,13 +23,13 @@ vector<string> split(string str, string delim) {
   return result;
 }
 
-void put_as_libsvm (int label, const Mat& mat) {
+void put_as_libsvm (int label, const Mat& mat, ostream& out) {
 	for (int y=0;y<mat.rows;y++) {
-		cout << label;
+		out << label;
 		for (int x=0;x<mat.cols;x++) {
-			cout << " " << x << ":" << mat.at<float>(y,x);
+			out << " " << x << ":" << mat.at<float>(y,x);
 		}
-		cout << endl;
+		out << endl;
 	}
 }
 

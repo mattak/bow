@@ -23,6 +23,8 @@ protected:
 	vector<int> sgrids;
 	string loadfile;
 public:
+	enum DataType {FLOAT, UCHAR};
+
 	string type;
 	Mat descriptor;
 	vector<KeyPoint> keypoint;
@@ -39,12 +41,24 @@ public:
 
 	// io
 	void save(const char* file,const bool bin=true);
-	void load(const char* file,const bool bin=true);
-	void write(ofstream& ofs);
-	void read(ifstream& ifs);
+	void load(const char* file);
+	void write(ofstream& ofs, const bool bin=true);
+	bool read(ifstream& ifs);
 
-	void bwrite(ofstream& ofs);
-	void bread(ifstream& ifs);
+	// util
+	Mat floated_descriptor();
+	DataType data_type();
+
+
+  friend ostream& operator <<(ostream& ros, Feature manipulator) {
+    return manipulator(ros);
+  }
+
+private:
+  ostream& operator()(ostream& ros) {
+    ros << "[" << type << "," << descriptor.rows << "," << descriptor.cols << "]";
+    return ros;
+  }
 };
 
 #endif

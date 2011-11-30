@@ -13,7 +13,7 @@ _SRC = $(shell ls src)
 SRC  = $(patsubst %,$(SDIR)/%,$(_SRC))
 _OBJ = $(subst .cpp,.o,$(_SRC))
 OBJ  = obj/feature.o obj/book.o obj/util.o #$(patsubst %,$(ODIR)/%,$(_OBJ))
-TARGET = desc main bk
+TARGET = desc main bk putsvm
 
 #$(ODIR)/%.o: %.cpp $(DEP) 
 #	$(CC) -c -o $@ $< $(INC)
@@ -27,6 +27,8 @@ desc: src/desc.cpp $(OBJ)
 main: src/main.cpp $(OBJ)
 	$(CC) -o $@ $^ $(INC) $(OPS)
 bk: src/bk.cpp $(OBJ)
+	$(CC) -o $@ $^ $(INC) $(OPS)
+putsvm: src/putsvm.cpp $(OBJ)
 	$(CC) -o $@ $^ $(INC) $(OPS)
 
 $(OBJ): | $(ODIR)

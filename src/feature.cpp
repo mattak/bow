@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <cv.h>
 #include <cxcore.h>
@@ -21,7 +22,30 @@ Feature::~Feature(){
 
 }
 
-// 
+Feature::DataType Feature::data_type() {
+	if (type=="orb" || type=="gorb") {
+		return Feature::UCHAR;
+	}
+	return Feature::FLOAT;
+}
+
+Mat Feature::floated_descriptor() {
+	if (data_type()==Feature::UCHAR) {
+		Mat dsc = Mat::zeros(descriptor.rows,descriptor.cols*8,CV_32FC1);
+		for (int y=0;y<descriptor.rows;y++) {
+			for (int x=0;x<descriptor.cols;x++) {
+				uchar c = descriptor.at<uchar>(y,x);
+				for (int p=0;p<8;p++) {
+					int v = (c >> p) & 0x01;
+					dsc.at<float>(y,x*8+p) = (float)v;
+				}
+			}
+		}
+		return dsc;
+	}
+	return descriptor;
+}
+
 void Feature::extract (const char *_type, const char *_imgfile) {
 	string s(_type);
 	string f(_imgfile);
@@ -102,43 +126,61 @@ void Feature::show() {
 // file writer, reader
 void Feature::save (const char* file, const bool bin) {
 	ofstream ofs;
-	if (bin) {
-		ofs.open(file, ios::out|ios::binary);
-		bwrite(ofs);
-	}
-	else {
-		ofs.open(file, ios::out);
-		write(ofs);
-	}
+	ofs.open(file, ios::out|ios::binary);
+	write(ofs, bin);
 	ofs.close();
 }
 
-void Feature::load (const char* file, const bool bin) {
+void Feature::load (const char* file) {
 	ifstream ifs;
-	if (bin) {
-		ifs.open(file, ios::in|ios::binary);
-		bread(ifs);
-	}
-	else {
-		ifs.open(file, ios::in);
-		read(ifs);
-	}
+	ifs.open(file, ios::in|ios::binary);
+	read(ifs);
 	ifs.close();
 }
 
 
 // stream writer, reader
-void Feature::read (ifstream& ifs) {
+bool Feature::read (ifstream& ifs) {
 	int y=0, x=0;
 	bool header=false;
+	bool read_binary=true;
+	bool readed_header = false;
+	bool done=false;
 	string line;
-	while (ifs && getline(ifs,line)) {
+	while (!done && ifs && getline(ifs,line)) {
 		if (line == "^") {
 			header = true;
 			continue;
 		}
-		if (line == "$") {
+		else if (line == "$") {
 			header = false;
+			readed_header = true;
+			if (read_binary) {
+				for (int y=0;y<descriptor.rows;y++) {
+					float px, py, scale, angle;
+					ifs.read((char*)&px,sizeof(float));
+					ifs.read((char*)&py,sizeof(float));
+					ifs.read((char*)&scale,sizeof(float));
+					ifs.read((char*)&angle,sizeof(float));
+					KeyPoint kp(px,py,scale,angle);
+					keypoint.push_back(kp);
+					if (type=="orb" || type=="gorb") {
+						for (int x=0;x<descriptor.cols;x++) {
+							uchar c;
+							ifs.read((char*)&c, sizeof(uchar));
+							descriptor.at<uchar>(y,x) = c;
+						}
+					}
+					else {
+						for (int x=0;x<descriptor.cols;x++) {
+							float f;
+							ifs.read((char*)&f, sizeof(float));
+							descriptor.at<float>(y,x) = f;
+						}
+					}
+				}
+				done = true;
+			}
 			continue;
 		}
 		if (header) {
@@ -156,8 +198,17 @@ void Feature::read (ifstream& ifs) {
 			else if (tag=="loadfile") {
 				loadfile = strs.at(1);
 			}
+			else if (tag=="binary") {
+				if (strs.at(1)=="1") {
+					read_binary = true;
+				}
+				else {
+					read_binary = false;
+				}
+			}
 		}
 		else {
+			// read plain
 			vector<string> strs = split(line, " ");
 			float px, py, scale, angle;
 			px = (float)atof(strs.at(0).c_str());
@@ -186,39 +237,69 @@ void Feature::read (ifstream& ifs) {
 				}
 			}
 			y++;
+			if (y>=descriptor.rows) done = true;
 		}
 	}
+	return readed_header;
 }
 
-void Feature::write (ofstream& ofs) {
+void Feature::write (ofstream& ofs, const bool bin) {
 	ofs << "^" << endl;
 	ofs << "type " << type << endl;
 	ofs << "size " << descriptor.rows << " " << descriptor.cols << endl;
 	ofs << "loadfile " << loadfile << endl;
+	ofs << "binary " << bin << endl;
 	ofs << "$" << endl;
-	for (int y=0; y<descriptor.rows; y++) {
-		KeyPoint kp = keypoint.at(y);
-		ofs << kp.pt.x << " " << kp.pt.y << " ";
-		ofs << kp.size << " " << kp.angle;
-		if (type=="orb" || type=="gorb") {
-			ofs << " ";
-			for (int x=0; x<descriptor.cols; x++) {
-				uchar c = descriptor.at<uchar>(y,x);
-				for (int p=0;p<8;p++) {
-					int v = (c >> p) & 0x01;
-					ofs << v;
+	if (bin) {
+		for (int y=0; y<descriptor.rows; y++) {
+			KeyPoint kp = keypoint.at(y);
+			float x = kp.pt.x;
+			float y = kp.pt.y;
+			float s = kp.size;
+			float r = kp.angle;
+			ofs.write((char*)&x,sizeof(float));
+			ofs.write((char*)&y,sizeof(float));
+			ofs.write((char*)&s,sizeof(float));
+			ofs.write((char*)&r,sizeof(float));
+			if (type=="orb" || type=="gorb") {
+				for (int x=0; x<descriptor.cols; x++) {
+					uchar c = descriptor.at<uchar>(y,x);
+					ofs.write((char*)&c, sizeof(uchar));
 				}
 			}
+			else {
+				for (int x=0; x<descriptor.cols; x++) {
+					float f = descriptor.at<float>(y,x);
+					ofs.write((char*)&f, sizeof(float));
+				}
+			} 
 		}
-		else {
-			for (int x=0; x<descriptor.cols; x++) {
-				ofs << " " << descriptor.at<float>(y,x);
+	}
+	else {
+		for (int y=0; y<descriptor.rows; y++) {
+			KeyPoint kp = keypoint.at(y);
+			ofs << kp.pt.x << " " << kp.pt.y << " ";
+			ofs << kp.size << " " << kp.angle;
+			if (type=="orb" || type=="gorb") {
+				ofs << " ";
+				for (int x=0; x<descriptor.cols; x++) {
+					uchar c = descriptor.at<uchar>(y,x);
+					for (int p=7;p>=0;p--) {
+						int v = (c >> p) & 0x01;
+						ofs << v;
+					}
+				}
 			}
+			else {
+				for (int x=0; x<descriptor.cols; x++) {
+					ofs << " " << descriptor.at<float>(y,x);
+				}
+			}
+			ofs << endl;
 		}
-		ofs << endl;
 	}
 }
-
+/*
 void Feature::bread (ifstream& ifs) {
 	const int BUFSIZE = 4096;
 	char buf[BUFSIZE];
@@ -310,4 +391,4 @@ void Feature::bwrite (ofstream& ofs) {
 		}
 	}
 }
-
+*/
