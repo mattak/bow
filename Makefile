@@ -13,31 +13,30 @@ _SRC = $(shell ls src)
 SRC  = $(patsubst %,$(SDIR)/%,$(_SRC))
 _OBJ = $(subst .cpp,.o,$(_SRC))
 OBJ  = obj/feature.o obj/book.o obj/util.o #$(patsubst %,$(ODIR)/%,$(_OBJ))
-TARGET = desc main bk putsvm
-
-#$(ODIR)/%.o: %.cpp $(DEP) 
-#	$(CC) -c -o $@ $< $(INC)
+TARGET = desc cbook cword test
+INSTALL_TARGET = desc cbook cword
 
 all: $(TARGET)
 
-#$(TARGET): $(OBJ)
-#	$(CC) -o $@ $^ $(INC)
+localbin: $(INSTALL_TARGET)
+	for f in $^; do cp $$f $(HOME)/bin/; done
+
+rmlocalbin:
+	for f in $(INSTALL_TARGET); do rm $(HOME)/bin/$$f; done
+
 desc: src/desc.cpp $(OBJ)
 	$(CC) -o $@ $^ $(INC) $(OPS)
-main: src/main.cpp $(OBJ)
+cbook: src/cbook.cpp $(OBJ)
 	$(CC) -o $@ $^ $(INC) $(OPS)
-bk: src/bk.cpp $(OBJ)
+cword: src/cword.cpp $(OBJ)
 	$(CC) -o $@ $^ $(INC) $(OPS)
-putsvm: src/putsvm.cpp $(OBJ)
+test: src/test.cpp $(OBJ)
 	$(CC) -o $@ $^ $(INC) $(OPS)
 
 $(OBJ): | $(ODIR)
 
 $(ODIR):
 	mkdir $(ODIR)
-
-#obj/main.o: src/main.cpp
-#	$(CC) -c -o $@ $< $(INC) $(OPS)
 
 obj/util.o: src/util.cpp include/util.h
 	$(CC) -c -o $@ $< $(INC) $(OPS)
