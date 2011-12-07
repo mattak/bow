@@ -1,0 +1,27 @@
+#!/bin/bash
+if [ $# -lt 3 ]; then
+  echo "usage : <type> <dstfile> <dirpath>"
+  echo " ex: descall surf tomatos.surf $HOME/img/cook/tomato/100"
+  exit 0
+fi
+
+type=$1
+dstfile=$2
+dirpath=$3
+
+total=`ls $dirpath |wc | table c 2`
+now=0
+for x in `ls $dirpath/*`
+do
+  now=`expr $now + 1`
+  output=`echo $x | arex '$/^.+?([^\/]+\.)\w+$/$1/'`
+  output="$output$type"
+  let percent=100*${now}/$total
+  echo -ne "\r now extracting... $output [\033[31m$percent\033[0m]%" 
+  desc $x $output -t $type -g
+  cat $output >> $dstfile
+  rm $output
+done
+
+printf "\n \033[31m%d\033[0m files extraction \033[32mcomplete!!\033[0m\n" $total
+

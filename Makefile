@@ -14,7 +14,7 @@ SRC  = $(patsubst %,$(SDIR)/%,$(_SRC))
 _OBJ = $(subst .cpp,.o,$(_SRC))
 OBJ  = obj/feature.o obj/book.o obj/util.o #$(patsubst %,$(ODIR)/%,$(_OBJ))
 TARGET = desc cbook cword test
-INSTALL_TARGET = desc cbook cword
+INSTALL_TARGET = desc cbook cword descall
 
 all: $(TARGET)
 
