@@ -264,7 +264,6 @@ void Book::read_book (ifstream& ifs) {
 					else {
 						readbinary = false;
 					}
-					cout << "loadbin? " << readbinary << endl;
 				}
 			}
 			else {
