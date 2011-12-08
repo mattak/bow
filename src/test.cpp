@@ -6,8 +6,17 @@
 #include "book.h"
 #include "util.h"
 
+#include <time.h>
+#include <sys/time.h>
+
 using namespace std;
 using namespace cv;
+
+double gettime() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec + tv.tv_usec * 1e-6;
+}
 
 void save (const char *file) {
   Feature f;
@@ -47,13 +56,20 @@ void test_index_saveload (Feature& f1, Feature& f2) {
 	book.makebook(100);
 	// save
 	flann::KDTreeIndexParams kdp;
+  double start,end;
+  start = gettime();
 	flann::Index sidx(book.book, kdp);
 	sidx.save("tmp_test.idx");
-	
+	end = gettime();
+  cout << "knn index creation time is " << (end - start) << endl;
+  
 	// load
 	flann::Index lidx;//(book.book,kdp);
+  start = gettime();
 	lidx.load(book.book, "tmp_test.idx");
-	
+	end = gettime();
+  cout << "knn index load time is " << (end - start) << endl;
+  
 	// test
 	Mat query = Mat::ones(1,book.book.cols,CV_32FC1);
 	flann::SearchParams searchparams;
@@ -111,6 +127,7 @@ void save_index_file (Book& book, const char* savefile) {
 // book -> words
 // 
 int main (int argc, char** argv) {
+  /*
 	if (argc>2) {
     Book book;
     book.load_book(argv[1]);
@@ -121,15 +138,16 @@ int main (int argc, char** argv) {
 		exit(0);
 	}
 	return 0;
-	/*
+  */
+	
 	Feature f1;
 	Feature f2;
 
-	f1.extract("orb", "/home/maruya-t/git/bow/67.jpg");
-	//f2.extract("surf", "/home/maruya-t/git/bow/67m.jpg");
+	f1.extract("surf", "/home/maruya-t/git/bow/41.jpg");
+	f2.extract("surf", "/home/maruya-t/git/bow/41m.jpg");
 	
 	// test_book_saveload(f1,f2);
-	// test_index_saveload(f1,f2);
+	test_index_saveload(f1,f2);
 	//test_words(f1, f2);
 	
 	cout << "c,r:" << f1.descriptor.cols << "," << f1.descriptor.rows << endl;
@@ -145,6 +163,5 @@ int main (int argc, char** argv) {
 	cout << "CV_64F:" << CV_64F << endl;
 	cout << "CV_8UC1:" << CV_8UC1 << endl;
 	return 0;
-	*/
 }
 

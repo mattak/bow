@@ -46,12 +46,16 @@ Mat Feature::floated_descriptor() {
 	return descriptor;
 }
 
-void Feature::extract (const char *_type, const char *_imgfile) {
+void Feature::extract (const char *_type, const char* imgfile) {
+  Mat img = imread(imgfile, 0);
+  string f(imgfile);
+  loadfile = f;
+  extract(_type, img);
+}
+
+void Feature::extract (const char *_type, Mat& img) {
 	string s(_type);
-	string f(_imgfile);
 	type = s;
-	loadfile = f;
-	Mat img = imread(_imgfile, 0);
 	
 	// add grid points
 	keypoint.clear();
