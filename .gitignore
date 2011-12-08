@@ -4,4 +4,7 @@ obj/
 *sift
 *surf
 *orb
+*.idx
+*.book
+*.word
 

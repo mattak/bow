@@ -101,15 +101,23 @@ void test_book_multi_load (const char* file) {
 	}
 }
 
+void save_index_file (Book& book, const char* savefile) {
+  flann::KDTreeIndexParams kdparams;
+  flann::Index idx(book.book, kdparams);
+  idx.save(savefile);
+}
+
 // feature -> book
 // book -> words
 // 
 int main (int argc, char** argv) {
-	if (argc>1) {
-		test_book_multi_load(argv[1]);
+	if (argc>2) {
+    Book book;
+    book.load_book(argv[1]);
+    save_index_file(book, argv[2]);
 	}
 	else {
-		cerr << "usage <multi book file>" << endl;
+		cerr << "usage <book file> <save file>" << endl;
 		exit(0);
 	}
 	return 0;
