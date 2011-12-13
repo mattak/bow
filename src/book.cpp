@@ -267,6 +267,7 @@ int Book::makebook (int k, bool hierarchical) {
 }
 
 void Book::getword (Feature& f, Mat& dst_word, flann::Index& idx, const int knn) {
+/*
 	if (f.data_type()==Feature::UCHAR) {
 		Mat tmp = f.floated_descriptor();
 		getword(tmp, dst_word, idx, knn);
@@ -274,6 +275,9 @@ void Book::getword (Feature& f, Mat& dst_word, flann::Index& idx, const int knn)
 	else {
 		getword(f.descriptor, dst_word, idx, knn);
 	}
+*/
+  Mat tmp = f.floated_descriptor();
+  getword(tmp, dst_word, idx, knn);
 }
 
 void Book::getword (Mat& src, Mat& dst_word, flann::Index& idx, const int knn) {

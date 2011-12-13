@@ -36,6 +36,7 @@ public:
 	void add_grid(int wstep, int hstep, int scale);
 
 	void extract(const char *type, const char *imgfile);
+  void extract(const char *type, Mat& grayimg);
 	
 	void show();
 
