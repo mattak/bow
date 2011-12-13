@@ -101,11 +101,42 @@ void test_book_multi_load (const char* file) {
 	}
 }
 
+void test_hierarchical_kmeans() {
+  int rows = 4;
+  int cols = 2;
+  Mat testpoints = Mat::zeros(rows,cols,CV_32FC1);
+  for (int i=0; i<rows; i++) {
+    for (int j=0; j<cols;j++) {
+      testpoints.at<float>(i,j) = (float)rand()/RAND_MAX;
+    }
+  }
+  Mat cluster;
+  Mat label;
+  int res = hierarchical_kmeans(2, testpoints, label, cluster, 2);
+  /*kmeans(
+      testpoints,
+      2,
+      label,
+      cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
+      1,
+      KMEANS_PP_CENTERS,
+      cluster
+  );
+  int res = balanced_kmeans(5, testpoints, label, cluster);
+  */
+  cout << res << endl;
+  cout << testpoints << endl;
+  cout << cluster << endl;
+  cout << cluster.rows << endl;
+}
+
 // feature -> book
 // book -> words
 // 
 int main (int argc, char** argv) {
-	if (argc>1) {
+	test_hierarchical_kmeans();
+  /*
+  if (argc>1) {
 		test_book_multi_load(argv[1]);
 	}
 	else {
@@ -113,7 +144,7 @@ int main (int argc, char** argv) {
 		exit(0);
 	}
 	return 0;
-	/*
+	
 	Feature f1;
 	Feature f2;
 

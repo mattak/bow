@@ -51,5 +51,7 @@ private:
 	}
 };
 
+int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level);
+int balanced_kmeans (int k, Mat& points, Mat& label, Mat& cluster);
 #endif
 
