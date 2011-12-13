@@ -4,11 +4,22 @@ Bag of Visual Words
 
 status
 ======
-- now developing
-- descriptor implemented
+- desc, cbook, cword, descall is ready to use
+
+install
+=======
+- At, first.
+
+  - modify make file for your environment especially cv++ in makefile.
+  - cv++ is opencv building support c compiling command.
+  - https://github.com/mattak/setup/blob/master/bin/cv++
+
+::
+  
+  make
+  make localbin # install for $HOME/bin
 
 todo
 ====
-- libsvm output for standard stream
-- get words for orb
+- orb grid extraction has bugs.
 
