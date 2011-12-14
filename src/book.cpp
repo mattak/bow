@@ -24,19 +24,16 @@ int balanced_kmeans (int k, Mat& points, Mat& label, Mat& cluster) {
   }
   ncluster++;
   if (points.rows<k) {
-    cerr << "balanced kmeans is failed, datasize is less than k" << endl;
+    throw "balanced kmeans is failed, datasize is less than k";
     exit(0);
   }
-  cout << "before new cluster" << endl;
   Mat newcluster = Mat::zeros(k,cluster.cols,cluster.type());
   rep(i,cluster.rows) {
     rep(j,cluster.cols) {
       newcluster.at<int>(i,j) = cluster.at<int>(i,j);
     }
   }
-  cout << "k,ncluster:" << k << "," << ncluster << endl;
   while (ncluster<k) {
-    cout << "ncluster:" << ncluster << endl;
     // find max data size of cluster
     int max_data_size = 0;
     int numlabel[ncluster];
@@ -54,7 +51,6 @@ int balanced_kmeans (int k, Mat& points, Mat& label, Mat& cluster) {
         max_numlabel = numlabel[i];
         max_label = i;
       }
-      cout << "numlabel[" << i << "]:" << numlabel[i] << endl;
     }
     // clustering
     Mat tmp_label;
@@ -91,7 +87,6 @@ int balanced_kmeans (int k, Mat& points, Mat& label, Mat& cluster) {
       newcluster.at<float>(max_label,j) = tmp_cluster.at<float>(0,j);
       newcluster.at<float>(ncluster,j) = tmp_cluster.at<float>(1,j);
     }
-    cout << newcluster << endl;
     ncluster++;
   }
   // copy cluster
@@ -109,38 +104,34 @@ int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level
   if (level<0) {
     cerr << "level failed" << endl;
   }
+
+  // clustering
   if (points.rows<dstk) {
-    cerr << "points size is less than k" << endl;
-    label = Mat::zeros(points.rows, 1, CV_32SC1);
-    cluster = Mat::zeros(1, points.cols, CV_32FC1);
-    // here will writer new cluster for one 
+    k=1;
+    cluster = Mat::zeros(1,points.cols,points.type());
+    label = Mat::zeros(points.rows,1,CV_32SC1);
+    rep(i,points.rows) {
+      rep(j,points.cols) {
+        cluster.at<float>(0,j) += points.at<float>(i,j);
+      }
+    }
+    rep(j,points.cols) {
+      cluster.at<float>(0,j) = cluster.at<float>(0,j) / points.rows;
+    }
     return 1;
   }
-  // clustering
-  cout << "before clustering[" << level << "]:" << k << endl;
-  cout << points << endl;
-  Mat tmp_label;
+
   kmeans(
     points,
     k,
-    tmp_label,
+    label,
     cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
     1,
     KMEANS_PP_CENTERS,
     cluster
   );
-  cout << "label copy:" << tmp_label.type() << "," << tmp_label.rows << "," << tmp_label.cols << endl;
-  cout << tmp_label << endl;
-  //label.release();
-  label = Mat::zeros(tmp_label.rows,tmp_label.cols,CV_32SC1);
-  cout << "craeted label" << endl;
-  rep(i,label.rows) {
-    rep(j,label.cols) {
-      label.at<int>(i,j) = tmp_label.at<int>(i,j);
-    }
-  }
-  cout << "after clustering[" << level << "]:" << k << endl;
-  if (level==1) {
+  
+  if (level==1 || k==1) {
     return k;
   }
   
@@ -155,10 +146,9 @@ int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level
   rep(i,label.rows) {
     nums[label.at<int>(i,0)]++;
   }
-  rep(i,k)
+  rep(i,k) {
     kpoints[i]=Mat::zeros(nums[i],points.cols,points.type());
-  rep(i,k)
-    cout << "level:" << level << ",nums[" << i << "]:" << nums[i] << endl;
+  }
   
   rep(i,points.rows) {
     int p = label.at<int>(i,0);
@@ -172,32 +162,52 @@ int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level
   int sumk = 0;
   Mat kclusters[k];
   Mat klabels[k];
-  rep(i,k) {
-    sumk += hierarchical_kmeans(k, kpoints[i], klabels[k], kclusters[i], level-1);
+  int label_nums[k];
+  rep(c,k) {
+    Mat tmplabel;
+    label_nums[c] = hierarchical_kmeans(k, kpoints[c], tmplabel, kclusters[c], level-1);
+    sumk += label_nums[c];
+    klabels[c] = tmplabel;
   }
-  cout << "reclustering true:" << level << "," << sumk << endl;
+
+  int total_label[k];
+  rep(i,k) {
+    total_label[i] = (i<=0) ? 0 : (total_label[i-1]+label_nums[i-1]);
+  }
+  
   // set result
   cluster = Mat::zeros(sumk, points.cols, points.type());
-  label = Mat::zeros(sumk, 1, CV_32SC1);
-  int p=0;
+  label = Mat::zeros(points.rows, 1, CV_32SC1);
+  points = Mat::zeros(points.rows, points.cols, points.type());
+  int p[3] = {0,0,0};
   rep(i,k) {
     rep(y,kclusters[i].rows) {
       rep(x,kclusters[i].cols) {
-        cluster.at<float>(p,x) = kclusters[i].at<float>(y,x);
+        cluster.at<float>(p[0],x) = kclusters[i].at<float>(y,x);
       }
-      label.at<int>(p,0) = klabels[i].at<int>(y,0);
-      p++;
+      p[0]++;
+    }
+    rep(y,klabels[i].rows) {
+      label.at<int>(p[1],0) = klabels[i].at<int>(y,0) + total_label[i];
+      p[1]++;
+    }
+    rep(y,kpoints[i].rows) {
+      rep(x,kpoints[i].cols) {
+        points.at<float>(p[2],x) = kpoints[i].at<float>(y,x);
+      }
+      p[2]++;
     }
   }
+
   // increase cluster.
   if (sumk<dstk) {
     // balanced clustering
-    balanced_kmeans (dstk, points, label, cluster);
+    sumk = balanced_kmeans (dstk, points, label, cluster);
   }
-  return cluster.rows;
+  return sumk;
 }
 
-int Book::makebook (int k, bool hierarchical) {
+int Book::makebook (int k, const int hierarchical_level) {
  	Feature::DataType dt;
 	try {
 		if (features.size()<1) {
@@ -221,7 +231,7 @@ int Book::makebook (int k, bool hierarchical) {
     rows += features.at(i).descriptor.rows;
     cols = features.at(i).descriptor.cols;
   }
-  	
+  
 	if (dt==Feature::UCHAR) {
 		points = Mat::zeros(rows,cols*8,CV_32FC1);
 	}
@@ -241,29 +251,8 @@ int Book::makebook (int k, bool hierarchical) {
   }
 
   Mat label;
-	int resk = 1;
-	if (hierarchical) {
-    int level = 0;
-    int tmpk = k;
-    while (tmpk>0) {
-      level++;
-      tmpk=tmpk>>1;
-    }
-    resk = hierarchical_kmeans(tmpk,points,label,book,level);
-  }
-	else {
-	  kmeans(
-		  points,
-		  k,
-		  label,
-		  cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
-		  1,
-		  KMEANS_PP_CENTERS,
-		  book
-	  );
-  }
-	resk = k;
-	return k;
+	int resk = hierarchical_kmeans(k,points,label,book,hierarchical_level);
+	return resk;
 }
 
 void Book::getword (Feature& f, Mat& dst_word, flann::Index& idx, const int knn) {

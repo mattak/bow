@@ -23,7 +23,7 @@ public:
 	vector<Feature> features;
 	Mat book;
   
-  int  makebook(int k, const bool hierarchical=false);
+  int  makebook(int k, const int hierarchical_level=1);
 
 	void getword(Feature &f, Mat& dst_word, flann::Index& idx, const int knn=3);
 	void getword(Mat& src, Mat& dst_word, flann::Index& idx, const int knn=3);
@@ -53,5 +53,6 @@ private:
 
 int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level);
 int balanced_kmeans (int k, Mat& points, Mat& label, Mat& cluster);
+
 #endif
 

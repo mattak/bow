@@ -117,10 +117,10 @@ void test_book_multi_load (const char* file) {
 	}
 }
 
-<<<<<<< HEAD
 void test_hierarchical_kmeans() {
-  int rows = 4;
+  int rows = 1024;
   int cols = 2;
+  srand(2);
   Mat testpoints = Mat::zeros(rows,cols,CV_32FC1);
   for (int i=0; i<rows; i++) {
     for (int j=0; j<cols;j++) {
@@ -129,7 +129,7 @@ void test_hierarchical_kmeans() {
   }
   Mat cluster;
   Mat label;
-  int res = hierarchical_kmeans(2, testpoints, label, cluster, 2);
+  int res = hierarchical_kmeans(2, testpoints, label, cluster, 5);
   /*kmeans(
       testpoints,
       2,
@@ -141,44 +141,37 @@ void test_hierarchical_kmeans() {
   );
   int res = balanced_kmeans(5, testpoints, label, cluster);
   */
-  cout << res << endl;
   cout << testpoints << endl;
   cout << cluster << endl;
+  cout << res << endl;
   cout << cluster.rows << endl;
-=======
+}
+
 void save_index_file (Book& book, const char* savefile) {
   flann::KDTreeIndexParams kdparams;
   flann::Index idx(book.book, kdparams);
   idx.save(savefile);
->>>>>>> 42730fb1fe2e5a25b7d0c1990ce5ccd610ef0327
 }
 
 // feature -> book
 // book -> words
 // 
 int main (int argc, char** argv) {
-<<<<<<< HEAD
 	test_hierarchical_kmeans();
   /*
   if (argc>1) {
 		test_book_multi_load(argv[1]);
-=======
   /*
 	if (argc>2) {
     Book book;
     book.load_book(argv[1]);
     save_index_file(book, argv[2]);
->>>>>>> 42730fb1fe2e5a25b7d0c1990ce5ccd610ef0327
 	}
 	else {
 		cerr << "usage <book file> <save file>" << endl;
 		exit(0);
 	}
 	return 0;
-<<<<<<< HEAD
-=======
-  */
->>>>>>> 42730fb1fe2e5a25b7d0c1990ce5ccd610ef0327
 	
 	Feature f1;
 	Feature f2;
@@ -203,5 +196,6 @@ int main (int argc, char** argv) {
 	cout << "CV_64F:" << CV_64F << endl;
 	cout << "CV_8UC1:" << CV_8UC1 << endl;
 	return 0;
+  */
 }
 
