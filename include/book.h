@@ -17,22 +17,22 @@ using namespace std;
 
 class Book {
 public:
-  Book();
-  ~Book();
+  Book() {;}
+  ~Book() {;}
   
-	vector<Feature> features;
+	vector< Ptr<Feature> > features;
 	Mat book;
   
   int  makebook(int k, const int hierarchical_level=1);
 
-	void getword(Feature &f, Mat& dst_word, flann::Index& idx, const int knn=3);
+	void getword(Ptr<Feature> &f, Mat& dst_word, flann::Index& idx, const int knn=3);
 	void getword(Mat& src, Mat& dst_word, flann::Index& idx, const int knn=3);
 
-	void getwords (vector<Feature>& fs, Mat& dst_words, const int knn=3);
+	void getwords (vector< Ptr<Feature> >& fs, Mat& dst_words, const int knn=3);
 	void getwords (const char* file, Mat& dst_words, const int knn=3);
 
   void add (const char *file);
-  void add (Feature& f);
+  void add (Ptr<Feature> &f);
 
   void save_book (const char *file, const bool bin=true);
   void load_book (const char *file);

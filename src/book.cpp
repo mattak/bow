@@ -8,12 +8,6 @@
 using namespace cv;
 using namespace std;
 
-Book::Book(){
-}
-
-Book::~Book(){
-}
-
 // before use this function, please set initial label and cluster.
 int balanced_kmeans (int k, Mat& points, Mat& label, Mat& cluster) {
   int ncluster = 0;
@@ -213,9 +207,9 @@ int Book::makebook (int k, const int hierarchical_level) {
 		if (features.size()<1) {
 			throw "there is not features in vector.";
 		}
-		dt = features.at(0).data_type();
+		dt = features.at(0)->data_type();
 		for (int i=1;i<features.size();i++) {
-			if (dt!=features.at(i).data_type()) {
+			if (dt!=features.at(i)->data_type()) {
 				throw "feature type is not consistent in feature vector.";
 			}
 		}
@@ -228,8 +222,8 @@ int Book::makebook (int k, const int hierarchical_level) {
 	Mat points;
   int rows=0, cols=0;
   for (int i=0;i<features.size();i++) {
-    rows += features.at(i).descriptor.rows;
-    cols = features.at(i).descriptor.cols;
+    rows += features.at(i)->descriptor.rows;
+    cols = features.at(i)->descriptor.cols;
   }
   
 	if (dt==Feature::UCHAR) {
@@ -241,8 +235,8 @@ int Book::makebook (int k, const int hierarchical_level) {
   
   int sy = 0;
   for (int i=0;i<features.size();i++) {
-    Feature f = features.at(i);
-		Mat tmp = f.floated_descriptor();
+    Ptr<Feature> f = features.at(i);
+		Mat tmp = f->floated_descriptor();
 		for (int y=0;y<tmp.rows;y++,sy++) {
 			for (int x=0;x<tmp.cols;x++) {
 				points.at<float>(sy,x) = tmp.at<float>(y,x);
@@ -255,7 +249,7 @@ int Book::makebook (int k, const int hierarchical_level) {
 	return resk;
 }
 
-void Book::getword (Feature& f, Mat& dst_word, flann::Index& idx, const int knn) {
+void Book::getword (Ptr<Feature> &f, Mat& dst_word, flann::Index& idx, const int knn) {
 /*
 	if (f.data_type()==Feature::UCHAR) {
 		Mat tmp = f.floated_descriptor();
@@ -265,7 +259,7 @@ void Book::getword (Feature& f, Mat& dst_word, flann::Index& idx, const int knn)
 		getword(f.descriptor, dst_word, idx, knn);
 	}
 */
-  Mat tmp = f.floated_descriptor();
+  Mat tmp = f->floated_descriptor();
   getword(tmp, dst_word, idx, knn);
 }
 
@@ -293,7 +287,7 @@ void Book::getword (Mat& src, Mat& dst_word, flann::Index& idx, const int knn) {
 	}
 }
 
-void Book::getwords (vector<Feature>& fs, Mat& dst_words, const int knn) {
+void Book::getwords (vector< Ptr<Feature> >& fs, Mat& dst_words, const int knn) {
 	dst_words = Mat::zeros(fs.size(), book.rows, CV_32FC1);
 
 	flann::KDTreeIndexParams kdp;
@@ -309,37 +303,23 @@ void Book::getwords (vector<Feature>& fs, Mat& dst_words, const int knn) {
 }
 
 void Book::getwords (const char *file, Mat& dst_words, const int knn) {
-	vector<Feature> fs;
-	ifstream ifs;
-	ifs.open(file, ios::in|ios::binary);
-	while (ifs) {
-		Feature f;
-		if (f.read(ifs)) {
-			fs.push_back(f);
-		}
-	}
-	ifs.close();
+  vector< Ptr<Feature> > fs;
+  fs = FeatureFactory::loadFeatures(file);
 	cerr << "feature load success : " << fs.size() << endl;
 	for (int i=0;i<fs.size();i++) {
-		cerr << fs.at(i) << endl;
+		cerr << fs.at(i)->type << endl;
 	}
 	getwords(fs, dst_words, knn);
 }
 
 void Book::add (const char *file) {
-  Feature f;
-  ifstream ifs;
-	ifs.open(file, ios::in|ios::binary);
-  while (ifs) {
-    Feature f;
-    if (f.read(ifs)) {
-			features.push_back(f);
-		}
+  vector< Ptr<Feature> > tmp = FeatureFactory::loadFeatures(file);
+  rep(i,tmp.size()) {
+    features.push_back(tmp.at(i));
   }
-	ifs.close();
 }
 
-void Book::add (Feature& f) {
+void Book::add (Ptr<Feature> &f) {
   features.push_back(f);
 }
 
@@ -382,7 +362,7 @@ void Book::load_book (const char* file) {
 void Book::write_book (ofstream& ofs, const bool bin) {
   ofs << "^" << endl;
   ofs << "type book" << endl;
-  ofs << "feature " << features.at(0).type << endl;
+  ofs << "feature " << features.at(0)->type << endl;
   ofs << "size " << book.rows << " " << book.cols << endl;
 	ofs << "binary " << bin << endl;
   ofs << "$" << endl;

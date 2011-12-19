@@ -17,7 +17,7 @@ double gettime() {
   gettimeofday(&tv, NULL);
   return tv.tv_sec + tv.tv_usec * 1e-6;
 }
-
+/*
 void save (const char *file) {
   Feature f;
   f.add_grid(20,20,10);
@@ -116,7 +116,7 @@ void test_book_multi_load (const char* file) {
 		book.features.at(i).show();
 	}
 }
-
+*/
 void test_hierarchical_kmeans() {
   int rows = 1024;
   int cols = 2;
@@ -130,17 +130,7 @@ void test_hierarchical_kmeans() {
   Mat cluster;
   Mat label;
   int res = hierarchical_kmeans(2, testpoints, label, cluster, 5);
-  /*kmeans(
-      testpoints,
-      2,
-      label,
-      cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,10,1.0),
-      1,
-      KMEANS_PP_CENTERS,
-      cluster
-  );
-  int res = balanced_kmeans(5, testpoints, label, cluster);
-  */
+
   cout << testpoints << endl;
   cout << cluster << endl;
   cout << res << endl;
