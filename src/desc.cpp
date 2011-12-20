@@ -1,31 +1,41 @@
 #include <cv.h>
 #include <cxcore.h>
 #include "feature.h"
+#include "util.h"
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
+
+#define rep(i,n) for(int i=0;i<n;i++)
 
 using namespace std;
 
 void usage_exit () {
-	cerr << "usage: <image file> <output file> (<options>)" << endl;
-	cerr << "  -s show" << endl;
-	cerr << "  -t <descriptor type>: surf, sift, orb" << endl;
-	cerr << "  -p output descriptor is plain text" << endl;
-	cerr << "  -g grid on?" << endl;
+	cerr << "usage: <output file> <image file>+ (<options>)" << endl;
+	cerr << "  -s : show" << endl;
+	cerr << "  -t <descriptor type>: (g)surf, (g)sift, (g)orb, rgb, lab, hsv, ycrcb" << endl;
+	cerr << "  -p : output descriptor is plain text" << endl;
+	cerr << "  -g <x,y,scale>: set grid. preffered 12x12x6 in orb" << endl;
+  cerr << "  -i : input descriptor from stdio and show" << endl;
+  cerr << "  -o : output descriptor from stdout. don't need <output file>" << endl;
 	exit(0);
 }
 
 int main (int argc, char **argv) {
-	if (argc<3) {
-		usage_exit();
-	}
-	
+  if (argc<=1) {
+    usage_exit();
+  }
 	string type = "surf";
 	bool show   = false;
 	bool binary = true;
 	bool grid   = false;
+  bool stdinput = false;
+  bool stdoutput = false;
+  vector<int> xgrid;
+  vector<int> ygrid;
+  vector<int> sgrid;
 	int result;
-	while ((result=getopt(argc,argv,"st:pg"))!=-1) {
+	while ((result=getopt(argc,argv,"st:pg:io"))!=-1) {
 		switch (result) {
 		case 's':
 			show = true;
@@ -36,9 +46,24 @@ int main (int argc, char **argv) {
 		case 'p':
 			binary = false;
 			break;
-		case 'g':
+		case 'g':{
 			grid = true;
+      vector<string> xys = split(string(optarg), ",");
+      int x = atoi(xys[0].c_str());
+      int y = atoi(xys[1].c_str());
+      int s = atoi(xys[2].c_str());
+      xgrid.push_back(x);
+      ygrid.push_back(y);
+      sgrid.push_back(s);
+      
 			break;
+    }
+    case 'i':
+      stdinput = true;
+      break;
+    case 'o':
+      stdoutput = true;
+      break;
 		case ':':
 		case '?':
 			usage_exit();
@@ -46,25 +71,84 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	if (!(optind+2>=argc || (optind+1>=argc && show))) {
+	if (!(optind+2>=argc
+        || (optind+1>=argc && (show || stdoutput))
+        || stdinput)) {
 		usage_exit();
 	}
 	
-	char *infile  = argv[optind];
-	char *outfile = argv[optind+1];
-	
-	KeyPointFeature f;
-	if (grid) {
-		f.add_grid(12, 12, 6);
-	}
-	f.extract(type.c_str(),infile);
-	
+	//char *outfile = argv[optind];
+  //char *infile  = argv[optind+1];
+  
+  vector< Ptr<Feature> > features;
+  if (stdinput) {
+    features = FeatureFactory::loadFeatures(cin);
+    rep(i,features.size()) {
+      features[i]->show();
+    }
+    return 0;
+  }
+  
+  const int TYPE_BLOB = 0;
+  const int TYPE_COLOR = 1;
+  int ftype;
+  if (type=="orb" || type=="gorb" ||
+      type=="surf" || type=="gsurf" ||
+      type=="sift" || type=="gsift") {
+    ftype = TYPE_BLOB;
+  }
+  else if (type=="rgb" || type=="lab"
+        || type=="hsv" || type=="ycrcb"){
+    ftype = TYPE_COLOR;
+  }
+  else {
+    cerr << "unknown descriptor type" << endl;
+    usage_exit();
+  }
+  
+  const char *savefile = argv[optind];
+  if (!stdoutput && !show) {
+    optind++;
+  }
+  
+  for (int i=optind;i<argc;i++) {
+    Ptr<Feature> f;
+    if (ftype==TYPE_BLOB) {
+      f = new KeyPointFeature();
+    }
+    else if (ftype==TYPE_COLOR) {
+      f = new ColorPatchFeature();
+    }
+    if (grid) {
+      rep(k,xgrid.size()) {
+        f->add_grid(xgrid[k],ygrid[k],sgrid[k]);
+      }
+    }
+    f->extract(type.c_str(),argv[i]);
+    features.push_back(f);
+  }
+
 	if (show) {
-		f.show();
+    cout << "intermidiate" << endl;
+    rep(i,features.size()) {
+      cout << features[i]->descriptor << endl;
+		  features[i]->show();
+    }
 	}
-	else {
-		f.save(outfile,binary);
+	else if(stdoutput) {
+		rep(i,features.size()) {
+      features[i]->set_io_binary(binary);
+      cout << (*features[i]);
+    }
 	}
+  else {
+    ofstream ofs;
+    ofs.open(savefile, ios::out | ios::binary);
+    rep(i,features.size()) {
+      ofs << (*features[i]);
+    }
+    ofs.close();
+  }
 	return 0;
 }
 

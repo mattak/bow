@@ -3,11 +3,14 @@
 
 #include <cv.h>
 #include <cxcore.h>
+#include <highgui.h>
 
 #include <vector>
 #include <string>
 #include <fstream>
 #include <iostream>
+
+#include "util.h"
 
 #define FEATURE_TYPE_SURF "surf"
 #define FEATURE_TYPE_SIFT "sift"
@@ -36,19 +39,19 @@ public:
 
 	virtual void add_grid(int wstep, int hstep, int scale) = 0;
 
-	void extract(const char *type, const char *imgfile);
+	virtual void extract(const char *type, const char *imgfile) = 0;
   virtual void extract(const char *type, Mat& grayimg) = 0;
 	
-	//void show();
+	virtual void show() = 0;
 
 	// io
   void set_io_binary(bool bin);
 	void save(const char* file, const bool bin=true);
 	void load(const char* file);
-	//void write(ofstream& ofs, const bool bin=true);
-	//bool read(ifstream& ifs);
+
   virtual ostream& write(ostream& os, const bool bin=true) = 0;
-  virtual bool read(istream& is) = 0;
+  bool read(istream& is);
+  virtual bool read(istream& is, HeaderInfo& info) = 0;
 
 	// util
 	Mat floated_descriptor();
@@ -61,56 +64,61 @@ public:
     manipulator.read(is);
     return is;
   }
-/*
-  virtual ostream& operator()(ostream& os);
-  virtual istream& operator()(istream& is);
-
-  friend ostream& operator <<(ostream& ros, Feature manipulator) {
-    return manipulator(ros);
-  }
-
-private:
-  ostream& operator()(ostream& ros) {
-    ros << "[" << type << "," << descriptor.rows << "," << descriptor.cols << "]";
-    return ros;
-  }
-*/
 };
 
 class KeyPointFeature : public Feature {
 public:
   KeyPointFeature() {}
   ~KeyPointFeature() {}
+  
+  void init();
 
   vector<KeyPoint> keypoint;
+
   void add_grid(int wstep, int hstep, int scale);
   void extract(const char *type, const char *imgpath) {
-    Feature::extract(type,imgpath);
+    Mat img = imread(imgpath, 0);
+    loadfile = string(imgpath);
+    extract(type,img);
   }
   void extract(const char *type, Mat& grayimg);
   void show();
 
 	DataType data_type();
   ostream& write(ostream& os, const bool bin=true);
-  bool read(istream& is);
+  bool read(istream& is, HeaderInfo& info);
 };
 
-/*
-class ColorFeature : public Feature {
+class ColorPatchFeature : public Feature {
 public:
+  ColorPatchFeature() {}
+  ~ColorPatchFeature() {}
+
+  vector<KeyPoint> keypoint;
+  void init();
+
   void add_grid(int wstep, int hstep, int scale=0);
-  void extract(Mat& img);
-}
-*/
+  void extract(const char *type, const char *imgpath) {
+    Mat img = imread(imgpath,1);
+    loadfile = string(imgpath);
+    extract(type,img);
+  }
+  void extract(const char *type, Mat& img);
+  void show();
+  
+  DataType data_type();
+  ostream& write(ostream& os, const bool bin=true);
+  bool read (istream& is, HeaderInfo& info);
+
+private:
+  void extract(const Mat& img, Mat& colorhist, const int wgrid, const int hgrid);
+};
 
 namespace FeatureFactory {
-  //FeatureFactory() {}
-  //~FeatureFactory() {}
   vector< Ptr<Feature> > loadFeatures(const char *file);
   vector< Ptr<Feature> > loadFeatures(istream& is);
   Ptr<Feature> loadFeature(const char *file);
   Ptr<Feature> loadFeature(istream& is);
-  
 };
 
 #endif

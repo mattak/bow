@@ -9,6 +9,8 @@
 #include <time.h>
 #include <sys/time.h>
 
+#define die(str) cout<<(str)<<endl;exit(1)
+
 using namespace std;
 using namespace cv;
 
@@ -17,25 +19,74 @@ double gettime() {
   gettimeofday(&tv, NULL);
   return tv.tv_sec + tv.tv_usec * 1e-6;
 }
+
+// Feature test
+void test_keypointfeature_stdout (int argc, char **argv) {
+  if (argc<=1) {
+    die("test-keypointfeature-stdout : <anyimg>");
+  }
+  for (int i=1;i<argc;i++) {
+    Ptr<Feature> f = new KeyPointFeature();
+    f->extract("orb",argv[i]);
+    f->set_io_binary(true);
+    cout << *f << endl;
+  }
+}
+
+void test_keypointfeature_stdin (int argc, char **argv) {
+  Ptr<Feature> f = new KeyPointFeature();
+  while (cin) {
+    cout << "reading..." << endl;
+    cin >> *f;
+    f->show();
+  }
+}
+
+void test_colorpatchfeature_stdout (int argc, char **argv) {
+  if (argc<=1) {
+    die("test-colorpatchfeature-stdout : <anyimg>");
+  }
+  for (int i=1;i<argc;i++) {
+    Ptr<Feature> f = new ColorPatchFeature();
+    f->add_grid(5,5,5);
+    f->extract("color",argv[i]);
+    f->set_io_binary(false);
+    cout << *f << endl;
+    f->show();
+  }
+}
+
+void test_colorpatchfeature_stdin (int argc, char** argv) {
+  Ptr<Feature> f = new ColorPatchFeature();
+  while (cin) {
+    cout << "reading ..." << endl;
+    cin >> *f;
+    f->show();  
+  }
+}
+
+void test_featurefactory_stdin (int argc, char **argv) {
+  vector< Ptr<Feature> > features;
+  features = FeatureFactory::loadFeatures(cin);
+  cout << "nums:" << features.size() << endl;
+  for (int i=0;i<features.size(); i++) {
+    features.at(i)->show();
+  }
+}
+
+void test_featurefactory_filein (int argc, char **argv) {
+  if (argc <= 1) {
+    die("test-featurefactory-filein : <file>+");
+  }
+  for (int i=1;i<argc;i++) {
+    vector< Ptr<Feature> > features = FeatureFactory::loadFeatures(argv[i]);
+    for (int j=0;j<features.size();j++) {
+      features[j]->show();
+    }
+  }
+}
+
 /*
-void save (const char *file) {
-  Feature f;
-  f.add_grid(20,20,10);
-  //f.extract("surf", `any jpg`);
-  f.save(file);
-  cout << "last:" << f.descriptor.at<float>(f.descriptor.rows-1,f.descriptor.cols-1) << endl;
-  cout << "klast:" << f.keypoint.at(f.keypoint.size()-1).pt.x << endl;
-  f.show();
-}
-
-void load (const char* file) {
-  Feature f;
-  f.load(file);
-  cout << "last:" << f.descriptor.at<float>(f.descriptor.rows-1,f.descriptor.cols-1) << endl;
-  cout << "klast:" << f.keypoint.at(f.keypoint.size()-1).pt.x << endl;
-  f.show();
-}
-
 void test_book_saveload (Feature& f1, Feature& f2) {
 	Book book;
 	book.add(f1);
@@ -147,45 +198,17 @@ void save_index_file (Book& book, const char* savefile) {
 // book -> words
 // 
 int main (int argc, char** argv) {
-	test_hierarchical_kmeans();
-  /*
-  if (argc>1) {
-		test_book_multi_load(argv[1]);
-  /*
-	if (argc>2) {
-    Book book;
-    book.load_book(argv[1]);
-    save_index_file(book, argv[2]);
-	}
-	else {
-		cerr << "usage <book file> <save file>" << endl;
-		exit(0);
-	}
-	return 0;
-	
-	Feature f1;
-	Feature f2;
+	//test_hierarchical_kmeans();
+  
+  // keypoint
+  //test_keypointfeature_stdout(argc,argv);
+  //test_keypointfeature_stdin(argc,argv);
+  test_colorpatchfeature_stdout(argc,argv);
 
-	f1.extract("surf", "/home/maruya-t/git/bow/41.jpg");
-	f2.extract("surf", "/home/maruya-t/git/bow/41m.jpg");
-	
-	// test_book_saveload(f1,f2);
-	test_index_saveload(f1,f2);
-	//test_words(f1, f2);
-	
-	cout << "c,r:" << f1.descriptor.cols << "," << f1.descriptor.rows << endl;
-	cout << "flags:" << f1.descriptor.flags << endl;
-	cout << "depth:" << f1.descriptor.depth() << endl;
-	cout << "type:"  << f1.descriptor.type() << endl;
-	cout << "CV_8U:" << CV_8U << endl;
-	cout << "CV_8S:" << CV_8S << endl;
-	cout << "CV_16U:" << CV_16U << endl;
-	cout << "CV_16S:" << CV_16S << endl;
-	cout << "CV_32S:" << CV_32S << endl;
-	cout << "CV_32F:" << CV_32F << endl;
-	cout << "CV_64F:" << CV_64F << endl;
-	cout << "CV_8UC1:" << CV_8UC1 << endl;
-	return 0;
-  */
+  // factory
+  //test_featurefactory_stdin(argc,argv);
+  //test_featurefactory_filein(argc,argv);
+
+  return 0;
 }
 
