@@ -11,13 +11,13 @@
 using namespace std;
 
 void usage_exit () {
-	cerr << "usage: <output file> <image file>+ (<options>)" << endl;
+	cerr << "usage: <image file>+ (<options>)" << endl;
 	cerr << "  -s : show" << endl;
 	cerr << "  -t <descriptor type>: (g)surf, (g)sift, (g)orb, rgb, lab, hsv, ycrcb" << endl;
 	cerr << "  -p : output descriptor is plain text" << endl;
 	cerr << "  -g <x,y,scale>: set grid. preffered 12x12x6 in orb" << endl;
   cerr << "  -i : input descriptor from stdio and show" << endl;
-  cerr << "  -o : output descriptor from stdout. don't need <output file>" << endl;
+  cerr << "  -o <output file>: output descriptor to file." << endl;
 	exit(0);
 }
 
@@ -30,12 +30,13 @@ int main (int argc, char **argv) {
 	bool binary = true;
 	bool grid   = false;
   bool stdinput = false;
-  bool stdoutput = false;
+  bool stdoutput = true;
+  const char *outputfile;
   vector<int> xgrid;
   vector<int> ygrid;
   vector<int> sgrid;
 	int result;
-	while ((result=getopt(argc,argv,"st:pg:io"))!=-1) {
+	while ((result=getopt(argc,argv,"st:pg:io:"))!=-1) {
 		switch (result) {
 		case 's':
 			show = true;
@@ -55,14 +56,14 @@ int main (int argc, char **argv) {
       xgrid.push_back(x);
       ygrid.push_back(y);
       sgrid.push_back(s);
-      
 			break;
     }
     case 'i':
       stdinput = true;
       break;
     case 'o':
-      stdoutput = true;
+      stdoutput = false;
+      outputfile = optarg;
       break;
 		case ':':
 		case '?':
@@ -71,15 +72,10 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	if (!(optind+2>=argc
-        || (optind+1>=argc && (show || stdoutput))
-        || stdinput)) {
+	if (!stdinput && optind>=argc) {
 		usage_exit();
 	}
-	
-	//char *outfile = argv[optind];
-  //char *infile  = argv[optind+1];
-  
+
   vector< Ptr<Feature> > features;
   if (stdinput) {
     features = FeatureFactory::loadFeatures(cin);
@@ -106,11 +102,6 @@ int main (int argc, char **argv) {
     usage_exit();
   }
   
-  const char *savefile = argv[optind];
-  if (!stdoutput && !show) {
-    optind++;
-  }
-  
   for (int i=optind;i<argc;i++) {
     Ptr<Feature> f;
     if (ftype==TYPE_BLOB) {
@@ -129,9 +120,7 @@ int main (int argc, char **argv) {
   }
 
 	if (show) {
-    cout << "intermidiate" << endl;
     rep(i,features.size()) {
-      cout << features[i]->descriptor << endl;
 		  features[i]->show();
     }
 	}
@@ -143,8 +132,9 @@ int main (int argc, char **argv) {
 	}
   else {
     ofstream ofs;
-    ofs.open(savefile, ios::out | ios::binary);
+    ofs.open(outputfile, ios::out | ios::binary);
     rep(i,features.size()) {
+      features[i]->set_io_binary(binary);
       ofs << (*features[i]);
     }
     ofs.close();

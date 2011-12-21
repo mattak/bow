@@ -275,12 +275,12 @@ ostream& KeyPointFeature::write(ostream& os, const bool bin) {
 	if (bin) {
 		rep (y,descriptor.rows) {
 			KeyPoint kp = keypoint.at(y);
-			float x = kp.pt.x;
-			float y = kp.pt.y;
+			float px = kp.pt.x;
+			float py = kp.pt.y;
 			float s = kp.size;
 			float r = kp.angle;
-			os.write((char*)&x,sizeof(float));
-			os.write((char*)&y,sizeof(float));
+			os.write((char*)&px,sizeof(float));
+			os.write((char*)&py,sizeof(float));
 			os.write((char*)&s,sizeof(float));
 			os.write((char*)&r,sizeof(float));
 			if (type=="orb" || type=="gorb") {
@@ -294,7 +294,7 @@ ostream& KeyPointFeature::write(ostream& os, const bool bin) {
 					float f = descriptor.at<float>(y,x);
 					os.write((char*)&f, sizeof(float));
 				}
-			} 
+			}
 		}
 	}
 	else {
@@ -333,12 +333,12 @@ ostream& ColorPatchFeature::write(ostream& os, const bool bin) {
 	if (bin) {
 		rep (y,descriptor.rows) {
 			KeyPoint kp = keypoint.at(y);
-			float x = kp.pt.x;
-			float y = kp.pt.y;
+			float px = kp.pt.x;
+			float py = kp.pt.y;
 			float s = kp.size;
 			float r = kp.angle;
-			os.write((char*)&x,sizeof(float));
-			os.write((char*)&y,sizeof(float));
+			os.write((char*)&px,sizeof(float));
+			os.write((char*)&py,sizeof(float));
 			os.write((char*)&s,sizeof(float));
 			os.write((char*)&r,sizeof(float));
 			rep (x,descriptor.cols) {
@@ -511,7 +511,6 @@ bool ColorPatchFeature::read (istream& is, HeaderInfo& info) {
   if (!done) {
     cerr << "reading data false" << endl;
   }
-  cout << descriptor << endl;
 	return done;
 }
 

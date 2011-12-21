@@ -6,15 +6,19 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#define rep(i,n) for(int i=0;i<n;i++)
+
 using namespace std;
 
 void usage_exit (const char* message) {
 	if (message!=NULL) {
 		cerr << message << endl;
 	}
-  cerr << "usage: (options) <k> <output file> <descs>+" << endl;
+  cerr << "usage: (options) <k> <descs>*" << endl;
 	cerr << "  -p : save plain" << endl;
 	cerr << "  -h : hierarchical" << endl;
+  cerr << "  -o <output file> : result to save file" << endl;
+  cerr << "  -i : input from stdin" << endl;
   exit(0);
 }
 
@@ -23,18 +27,28 @@ int main (int argc, char **argv) {
 		usage_exit(NULL);
 	}
 
-	bool hierarchical = false;
 	bool binary = true;
-	
+  bool stdinput = false;
+  bool stdoutput = true;
+	const char *outputfile;
+  int hierarchical_level = 1;
+  
 	int result;
-	while ((result=getopt(argc,argv,"hp"))!=-1) {
+	while ((result=getopt(argc,argv,"h:pio:"))!=-1) {
 		switch (result) {
 		case 'h':
-			hierarchical = true;
+      hierarchical_level = atoi(optarg);
 			break;
 		case 'p':
 			binary = false;
 			break;
+    case 'i':
+      stdinput = true;
+      break;
+    case 'o':
+      stdoutput = false;
+      outputfile = optarg;
+      break;
 		case ':':
 		case '?':
 			usage_exit("unknown option");
@@ -42,23 +56,32 @@ int main (int argc, char **argv) {
 		}
 	}
 	
-	if (optind+3>=argc) {
+	if (optind+2>=argc || (!stdinput && optind+1>=argc)) {
 		usage_exit("argument size is not enough");
 	}
 	
-	int k = atoi(argv[optind]);
-	string outfile = string(argv[optind+1]);
+	int k = atoi(argv[optind++]);
 	
 	Book book;
-	for (int i=optind+2;i<argc;i++) {
-		cout << "read book:" << i << "," << argv[i] << endl;
+	for (int i=optind;i<argc;i++) {
+		cerr << "read book:" << i << "," << argv[i] << endl;
 		book.add(argv[i]);
 	}
+  if (stdinput) {
+    vector< Ptr<Feature> > features = FeatureFactory::loadFeatures(cin);
+    rep(i,features.size()) {
+      book.add(features[i]);
+    }
+  }
 	
-	cout << "make book" << endl;
-	book.makebook(k, hierarchical);
-	cout << "save book" << endl;
-	book.save_book(outfile.c_str(), binary);
+	cerr << "make book" << endl;
+	book.makebook(k, hierarchical_level);
+  if (stdoutput) {
+    cout << book;
+  }
+  else {
+	  book.save_book(outputfile, binary);
+  }
 	return 0;
 }
 

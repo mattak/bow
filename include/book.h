@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include "feature.h"
+#include "util.h"
 
 using namespace cv;
 using namespace std;
@@ -37,18 +38,17 @@ public:
   void save_book (const char *file, const bool bin=true);
   void load_book (const char *file);
 
-  void write_book (ofstream& ofs, const bool bin=true);
-  void read_book (ifstream& ifs);
+  ostream& write_book (ostream& os, const bool bin=true);
+  bool read_book (istream& is);
+  bool read_book (istream& is, HeaderInfo& info);
 	
-	friend ostream& operator <<(ostream& ros, Book manipulator) {
-		return manipulator(ros);
+	friend ostream& operator <<(ostream& os, Book& manipulator) {
+		return manipulator.write_book(os);
 	}
-
-private:
-	ostream& operator()(ostream& ros) {
-		ros << "[row,col]=[" << book.rows << "," << book.cols << "]" << endl;
-		return ros;
-	}
+  friend istream& operator >>(istream& is, Book& manipulator) {
+    manipulator.read_book(is);
+    return is;
+  }
 };
 
 int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level);

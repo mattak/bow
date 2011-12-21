@@ -79,6 +79,10 @@ public:
   void extract(const char *type, const char *imgpath) {
     Mat img = imread(imgpath, 0);
     loadfile = string(imgpath);
+    if (img.empty() || img.rows<=0 || img.cols<=0) {
+      cerr << "error loading image:" << loadfile << endl;
+      return;
+    }
     extract(type,img);
   }
   void extract(const char *type, Mat& grayimg);
@@ -101,6 +105,10 @@ public:
   void extract(const char *type, const char *imgpath) {
     Mat img = imread(imgpath,1);
     loadfile = string(imgpath);
+    if (img.empty() || img.rows<=0 || img.cols<=0) {
+      cerr << "error loading image:" << loadfile << endl;
+      return;
+    }
     extract(type,img);
   }
   void extract(const char *type, Mat& img);
