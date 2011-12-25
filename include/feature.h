@@ -21,6 +21,7 @@ using namespace cv;
 
 class Feature {
 protected:
+  HeaderInfo headerinfo;
 	vector<int> xgrids;
 	vector<int> ygrids;
 	vector<int> sgrids;
