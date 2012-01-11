@@ -15,7 +15,7 @@ void usage_exit () {
 	cerr << "  -s : show" << endl;
 	cerr << "  -t <descriptor type>: (g)surf, (g)sift, (g)orb, rgb, lab, hsv, ycrcb" << endl;
 	cerr << "  -p : output descriptor is plain text" << endl;
-	cerr << "  -g <x,y,scale>: set grid. preffered 12x12x6 in orb" << endl;
+	cerr << "  -g <x,y,scale>: set grid. preffered 12,12,6 in orb" << endl;
   cerr << "  -i : input descriptor from stdio and show" << endl;
   cerr << "  -o <output file>: output descriptor to file." << endl;
 	exit(0);

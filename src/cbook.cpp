@@ -16,7 +16,7 @@ void usage_exit (const char* message) {
 	}
   cerr << "usage: (options) <k> <descs>*" << endl;
 	cerr << "  -p : save plain" << endl;
-	cerr << "  -h : hierarchical" << endl;
+	cerr << "  -h <hierarchical_level>: hierarchical level. k = k^level" << endl;
   cerr << "  -o <output file> : result to save file" << endl;
   cerr << "  -i : input from stdin" << endl;
   exit(0);
