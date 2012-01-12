@@ -24,10 +24,13 @@ vector<string> split(string str, string delim) {
   return result;
 }
 
-void put_as_libsvm (int label, const Mat& mat, ostream& out) {
+void put_as_libsvm (const Mat& mat, ostream& out, const char *label) {
 	for (int y=0;y<mat.rows;y++) {
-		out << label;
-		for (int x=0;x<mat.cols;x++) {
+		if (label!=NULL) {
+			out << label << " ";
+		}
+		out << "0:" << mat.at<float>(y,0);
+		for (int x=1;x<mat.cols;x++) {
 			out << " " << x << ":" << mat.at<float>(y,x);
 		}
 		out << endl;
@@ -53,6 +56,7 @@ ostream& HeaderInfo::write (ostream& os) {
       cout << " " << elms.at(i);
     }
     cout << endl;
+		it++;
   }
   os << "$" << endl;
   return os;

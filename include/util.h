@@ -8,8 +8,7 @@ using namespace cv;
 using namespace std;
 
 vector<string> split(string str, string delim);
-
-void put_as_libsvm (int label, const Mat& mat, ostream& out = cout);
+void put_as_libsvm (const Mat& mat, ostream& out = cout, const char *label = NULL);
 
 class HeaderInfo {
 public:
