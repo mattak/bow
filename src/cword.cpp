@@ -26,7 +26,7 @@ int main (int argc, char **argv) {
 	const char *bookfile = argv[1];
 	const char *savefile = argv[2];
 	Book book;
-	book.load_book(bookfile);
+	book.load(bookfile);
 	ofstream ofs;
 	ofs.open(savefile);
 

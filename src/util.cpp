@@ -2,6 +2,7 @@
 #include <cxcore.h>
 #include <vector>
 #include <string>
+#include <fstream>
 #include "util.h"
 
 using namespace cv;
@@ -77,6 +78,35 @@ bool HeaderInfo::read (istream& is) {
     data.insert( map< string, vector<string> >::value_type(tag, elms) );
   }
   return !isheader;
+}
+
+// DataIO
+//--------
+void DataIO::set_io_binary (bool bin) {
+	io_binary = bin;
+}
+
+void DataIO::save (const char* file, const bool bin) {
+	ofstream ofs;
+	ofs.open(file, ios::out|ios::binary);
+	write(ofs,bin);
+	ofs.close();
+}
+
+void DataIO::load (const char* file) {
+	ifstream ifs;
+	ifs.open(file, ios::in|ios::binary);
+	read(ifs);
+	ifs.close();
+}
+
+bool DataIO::read (istream& is) {
+	headerinfo.init();
+	is >> headerinfo;
+	if (headerinfo.data.empty()) {
+		return false;
+	}
+	return read(is, headerinfo);
 }
 
 

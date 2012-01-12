@@ -314,26 +314,7 @@ void Book::add (Ptr<Feature> &f) {
   features.push_back(f);
 }
 
-void Book::save_book (const char* file, const bool bin) {
-  ofstream ofs;
-	if (bin) {
-		ofs.open(file, ios::out | ios::binary);
-	}
-	else {
-		ofs.open(file, ios::out);
-	}
-  write_book(ofs, bin);
-  ofs.close();
-}
-
-void Book::load_book (const char* file) {
-  ifstream ifs;
-	ifs.open(file, ios::in | ios::binary);
-  read_book(ifs);
-  ifs.close();
-}
-
-ostream& Book::write_book (ostream& os, const bool bin) {
+ostream& Book::write (ostream& os, const bool bin) {
   os << "^" << endl;
   os << "type book" << endl;
   os << "feature " << features.at(0)->type << endl;
@@ -360,16 +341,7 @@ ostream& Book::write_book (ostream& os, const bool bin) {
   return os;
 }
 
-bool Book::read_book (istream& is) {
-  HeaderInfo info;
-  is >> info;
-  if (info.data.empty()) {
-    return false;
-  }
-  return read_book(is, info);
-}
-
-bool Book::read_book (istream& is, HeaderInfo& info) {
+bool Book::read (istream& is, HeaderInfo& info) {
   bool done = false;
 	bool readbinary = false;
   {

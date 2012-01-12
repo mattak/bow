@@ -16,7 +16,7 @@ using namespace std;
 #define TYPE_KMTREE 1
 #define TYPE_LLTREE 2
 
-class Book {
+class Book : public DataIO {
 public:
   Book() {;}
   ~Book() {;}
@@ -35,20 +35,11 @@ public:
   void add (const char *file);
   void add (Ptr<Feature> &f);
 
-  void save_book (const char *file, const bool bin=true);
-  void load_book (const char *file);
+  //void save_book (const char *file, const bool bin=true);
+  //void load_book (const char *file);
 
-  ostream& write_book (ostream& os, const bool bin=true);
-  bool read_book (istream& is);
-  bool read_book (istream& is, HeaderInfo& info);
-	
-	friend ostream& operator <<(ostream& os, Book& manipulator) {
-		return manipulator.write_book(os);
-	}
-  friend istream& operator >>(istream& is, Book& manipulator) {
-    manipulator.read_book(is);
-    return is;
-  }
+  ostream& write (ostream& os, const bool bin=true);
+  bool read (istream& is, HeaderInfo& info);
 };
 
 int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level);

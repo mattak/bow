@@ -29,5 +29,32 @@ public:
   }
 };
 
+
+class DataIO {
+protected:
+	bool io_binary;
+public:
+	HeaderInfo headerinfo;
+
+	DataIO()  { io_binary = true; }
+	~DataIO() {;}
+
+	void set_io_binary(bool bin);
+	void save(const char* file, const bool bin=true);
+	void load(const char* file);
+
+	virtual ostream& write(ostream& os, const bool bin=true) = 0;
+	virtual bool read(istream& is, HeaderInfo& info) = 0;
+	bool read(istream& is);
+
+	friend ostream& operator <<(ostream &os, DataIO& manipulator) {
+		return manipulator.write(os, manipulator.io_binary);
+	}
+	friend istream& operator >>(istream &is, DataIO& manipulator) {
+	  manipulator.read(is);
+	  return is;
+	}
+};
+
 #endif
 
