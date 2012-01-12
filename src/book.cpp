@@ -2,6 +2,9 @@
 #include "book.h"
 #include "util.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <algorithm>
 
 #define rep(i,n) for(int i=0;i<n;i++)
 
@@ -201,8 +204,9 @@ int hierarchical_kmeans (int k, Mat& points, Mat& label, Mat& cluster, int level
   return sumk;
 }
 
-int Book::makebook (int k, const int hierarchical_level) {
- 	Feature::DataType dt;
+int Book::makebook (int k, const int hierarchical_level, const int _maxrowsize) {
+	int maxrowsize = _maxrowsize;
+	Feature::DataType dt;
 	try {
 		if (features.size()<1) {
 			throw "there is not features in vector.";
@@ -218,32 +222,65 @@ int Book::makebook (int k, const int hierarchical_level) {
 		cerr << "error: " << str << endl;
 		exit(1);
 	}
-	
+
 	Mat points;
+	int *shuffles;
   int rows=0, cols=0;
   for (int i=0;i<features.size();i++) {
     rows += features.at(i)->descriptor.rows;
     cols = features.at(i)->descriptor.cols;
   }
-  
-	if (dt==Feature::UCHAR) {
-		points = Mat::zeros(rows,cols*8,CV_32FC1);
+
+	if (rows < maxrowsize) {
+		maxrowsize = rows;
 	}
 	else {
-		points = Mat::zeros(rows,cols,CV_32FC1);
+		cerr << "points size reduced from " << rows << " to " << maxrowsize <<  " with shuffled" << endl;
+	}
+
+	shuffles = new int[rows];
+	rep(i,rows) {
+		shuffles[i] = i;
+	}
+	srand(time(NULL));
+	rep(i,rows) {
+		int v1  = rand()%rows;
+		int v2  = rand()%rows;
+		int swp = shuffles[v1];
+		shuffles[v1] = shuffles[v2];
+		shuffles[v2] = swp;
+	}
+	
+	int *shuffledindex = new int[maxrowsize];
+	rep(i,maxrowsize) {
+		shuffledindex[i] = shuffles[i];
+	}
+	delete [] shuffles;
+	sort(shuffledindex, shuffledindex+maxrowsize);
+
+	if (dt==Feature::UCHAR) {
+		points = Mat::zeros(maxrowsize,cols*8,CV_32FC1);
+	}
+	else {
+		points = Mat::zeros(maxrowsize,cols,CV_32FC1);
 	}
   
   int sy = 0;
+	int shuffledindex_y = 0;
   for (int i=0;i<features.size();i++) {
     Ptr<Feature> f = features.at(i);
 		Mat tmp = f->floated_descriptor();
 		for (int y=0;y<tmp.rows;y++,sy++) {
+			if (shuffledindex[shuffledindex_y]!=sy)
+				continue;
+			int idx = shuffledindex[shuffledindex_y];
 			for (int x=0;x<tmp.cols;x++) {
-				points.at<float>(sy,x) = tmp.at<float>(y,x);
+				points.at<float>(shuffledindex_y,x) = tmp.at<float>(y,x);
 			}
+			shuffledindex_y++;
 		}
   }
-
+	delete [] shuffledindex;
   Mat label;
 	int resk = hierarchical_kmeans(k,points,label,book,hierarchical_level);
 	return resk;

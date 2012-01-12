@@ -24,7 +24,7 @@ public:
 	vector< Ptr<Feature> > features;
 	Mat book;
   
-  int  makebook(int k, const int hierarchical_level=1);
+  int  makebook(int k, const int hierarchical_level=1, const int maxfeaturesize=100000);
 
 	void getword(Ptr<Feature> &f, Mat& dst_word, flann::Index& idx, const int knn=3);
 	void getword(Mat& src, Mat& dst_word, flann::Index& idx, const int knn=3);

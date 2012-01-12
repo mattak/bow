@@ -96,9 +96,8 @@ int main (int argc, char **argv) {
 		}
 	}
 	
-	cerr << "make book" << endl;
 	book.makebook(k, hierarchical_level);
-  if (stdoutput) {
+	if (stdoutput) {
 		book.set_io_binary(binary);
     cout << book;
   }
