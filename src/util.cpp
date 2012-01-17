@@ -29,9 +29,9 @@ void put_as_libsvm (const Mat& mat, ostream& out, const char *label) {
 		if (label!=NULL) {
 			out << label << " ";
 		}
-		out << "0:" << mat.at<float>(y,0);
+		out << "1:" << mat.at<float>(y,0);
 		for (int x=1;x<mat.cols;x++) {
-			out << " " << x << ":" << mat.at<float>(y,x);
+			out << " " << (x+1) << ":" << mat.at<float>(y,x);
 		}
 		out << endl;
 	}
