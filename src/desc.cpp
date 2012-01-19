@@ -13,7 +13,7 @@ using namespace std;
 void usage_exit () {
 	cerr << "usage: <image file>+ (<options>)" << endl;
 	cerr << "  -s : show" << endl;
-	cerr << "  -t <descriptor type>: (g)surf, (g)sift, (g)orb, rgb, lab, hsv, ycrcb" << endl;
+	cerr << "  -t <descriptor type>: (g)surf, (g)sift, (g)orb, (g)rgb, (g)lab, (g)hsv, (g)ycrcb" << endl;
 	cerr << "  -p : output descriptor is plain text" << endl;
 	cerr << "  -g <x,y,scale>: set grid. preffered 12,12,6 in orb" << endl;
   cerr << "  -i : input descriptor from stdio and show" << endl;
@@ -93,8 +93,10 @@ int main (int argc, char **argv) {
       type=="sift" || type=="gsift") {
     ftype = TYPE_BLOB;
   }
-  else if (type=="rgb" || type=="lab"
-        || type=="hsv" || type=="ycrcb"){
+  else if (type=="rgb" || type=="grgb"
+				|| type=="lab" || type=="glab"
+        || type=="hsv" || type=="ghsv"
+			 	|| type=="ycrcb" || type=="gycrcb") {
     ftype = TYPE_COLOR;
   }
   else {

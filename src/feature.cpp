@@ -61,16 +61,21 @@ void ColorPatchFeature::extract (const char *_type, Mat& colorimg) {
   }
   type = string(_type);
   Mat dstimg = colorimg;
-  if (type == "lab") {
+
+  string subtype = (type.at(0)=='g') ? type.substr(1) : type;
+
+  if (subtype == "lab") {
     cvtColor(colorimg, dstimg, CV_BGR2Lab);
   }
-  else if (type == "hsv") {
+  else if (subtype == "hsv") {
     cvtColor(colorimg, dstimg, CV_BGR2HSV);
   }
-  else if (type == "ycrcb") {
+  else if (subtype == "ycrcb") {
     cvtColor(colorimg, dstimg, CV_BGR2YCrCb);
   }
-  extract(dstimg, descriptor, 1, 1);
+	if (type.at(0)!='g') {
+		extract(dstimg, descriptor, 1, 1);
+	}
   if (!xgrids.empty()) {
     rep (i,xgrids.size()) {
       int wgrid = xgrids.at(i);
