@@ -563,7 +563,10 @@ Ptr<Feature> FeatureFactory::loadFeature(istream& is) {
     feature = new KeyPointFeature();
     feature->read(is, info);
   }
-  else if (type=="rgb" || type=="lab" || type=="hsv" || type=="ycrcb") {
+  else if (type=="rgb" || type=="grgb"
+			|| type=="lab"	 || type=="glab"
+			|| type=="hsv"   || type=="ghsv"
+			|| type=="ycrcb" || type=="gycrcb") {
     feature = new ColorPatchFeature();
     feature->read(is, info);
   }
