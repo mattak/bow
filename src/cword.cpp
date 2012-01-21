@@ -13,35 +13,34 @@ void usage_exit (const char* message) {
   if (message!=NULL) {
     cerr << message << endl;
   }
-  cerr << "usage: <book file> (<desc file> <word file>?)? <option>" << endl;
+  cerr << "usage: <book file> <desc file>+ <option>" << endl;
 	cerr << "option:" << endl;
 	cerr << "  -l <label> : label for output data" << endl;
 	cerr << "  -k <knn>   : knn votes" << endl;
 	cerr << "ex:" << endl;
-	cerr << " cword t.book < t.orb > t.word" << endl;
 	cerr << " cword t.book t.orb > t.word" << endl;
-	cerr << " cword t.book t.orb t.word" << endl;
-	cerr << " cword t.book t.orb t.word -l 0" << endl;
+	cerr << " cword t.book frame1.orb frame2.orb -knn 3 > t.word" << endl;
+	cerr << " cword t.book frame0.orb frame1.orb frame2.orb > t.word" << endl;
+	cerr << " cword t.book t.orb -l 0 > t.word " << endl;
 	exit(0);
 }
 
 inline
 void output (Book& book, vector< Ptr<Feature> >& desc, int knn, const char *label, ostream& os){
 	Mat word;
-	book.getwords(desc, word, knn);
+	book.getmultiframeword(desc, word, knn);
 	put_as_libsvm(word, os, label);
 }
 
 int main (int argc, char **argv) {
-	if (argc<2) {
+	if (argc<3) {
 		usage_exit("argument size is not enough");
 	}
 	
-	const char *bookfile = argv[1];
+	const char *bookfile = NULL;
 	const char *descfile = NULL;
-	const char *savefile = NULL;
 	const char *label    = NULL;
-	int knn = 3;
+	int knn = 1;
 
 	int result;
 	while ((result=getopt(argc,argv,"l:k:"))!=-1) {
@@ -58,31 +57,37 @@ int main (int argc, char **argv) {
 			break;
 		}
 	}
-
-	descfile = (optind+1<argc) ? argv[optind+1] : NULL;
-	savefile = (optind+2<argc) ? argv[optind+2] : NULL;
+	
+	bookfile = (optind<argc) ? argv[optind] : NULL;
+	//descfile = (optind+1<argc) ? argv[optind+1] : NULL;
 
 	Book book;
 	book.load(bookfile);
 
-	// load
-	vector< Ptr<Feature> > desc;
-	if (descfile != NULL) {
-		desc = FeatureFactory::loadFeatures(descfile);
-	}
-	else {
-		desc = FeatureFactory::loadFeatures(cin);
+	if (optind+1>=argc) {
+		usage_exit("no descriptor file");
 	}
 
-	if (savefile != NULL) {
-		ofstream ofs;
-		ofs.open(savefile);
-		output(book, desc, knn, label, ofs);
-		ofs.close();
+	// load
+	vector< Ptr<Feature> > desc;
+	for (int i=optind+1;i<argc;i++) {
+		vector< Ptr<Feature> > d;
+		d = FeatureFactory::loadFeatures(argv[i]);
+		for(int j=0;j<d.size();j++) {
+			desc.push_back(d.at(j));
+		}
 	}
-	else {
-		output(book, desc, knn, label, cout);	
-	}
+
+	cerr << desc.size() <<  " frames readed" << endl;
+
+//	if (savefile != NULL) {
+//		ofstream ofs;
+//		ofs.open(savefile);
+//		output(book, desc, knn, label, ofs);
+//		ofs.close();
+//	}
+	
+	output(book, desc, knn, label, cout);	
 	return 0;
 }
 

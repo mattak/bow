@@ -26,11 +26,13 @@ public:
   
   int  makebook(int k, const int hierarchical_level=1, const int maxfeaturesize=100000);
 
-	void getword(Ptr<Feature> &f, Mat& dst_word, flann::Index& idx, const int knn=3);
-	void getword(Mat& src, Mat& dst_word, flann::Index& idx, const int knn=3);
+	void getword(Ptr<Feature> &f, Mat& dst_word, flann::Index& idx, const int knn=1);
+	void getword(Mat& src, Mat& dst_word, flann::Index& idx, const int knn=1);
 
-	void getwords (vector< Ptr<Feature> >& fs, Mat& dst_words, const int knn=3);
-	void getwords (const char* file, Mat& dst_words, const int knn=3);
+	void getmultiframeword (vector< Ptr<Feature> >& fs, Mat& dst_words, const int knn=1);
+
+	void getwords (vector< Ptr<Feature> >& fs, Mat& dst_words, const int knn=1);
+	void getwords (const char* file, Mat& dst_words, const int knn=1);
 
   void add (const char *file);
   void add (Ptr<Feature> &f);

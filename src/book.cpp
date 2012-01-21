@@ -315,6 +315,38 @@ void Book::getword (Mat& src, Mat& dst_word, flann::Index& idx, const int knn) {
 	}
 }
 
+void Book::getmultiframeword(vector< Ptr<Feature> >& frames, Mat& dst, const int knn) {
+	// join features to one
+	int rows = 0;
+	int cols = -1;
+	for (int i=0;i<frames.size();i++) {
+		Mat tmp = frames[i]->descriptor;
+		int r = tmp.rows;
+		rows += r;
+		cols = (cols<0) ? tmp.cols : cols;
+		if (cols != tmp.cols) {
+			cerr << "column size is not consistent!!" << endl;
+			exit(1);
+		}
+	}
+	
+	Mat src = Mat::zeros(rows, cols, CV_32FC1);
+	int cy = 0;
+	for (int i=0;i<frames.size();i++) {
+		Mat tmp = frames[i]->floated_descriptor();
+		for(int y=0;y<tmp.rows;y++,cy++) {
+			rep(x,tmp.cols) {
+				src.at<float>(cy,x) = tmp.at<float>(y,x);
+			}
+		}
+	}
+	
+	flann::KDTreeIndexParams kdp;
+	flann::Index idx(book,kdp);
+	
+	getword(src,dst,idx,knn);
+}
+
 void Book::getwords (vector< Ptr<Feature> >& fs, Mat& dst_words, const int knn) {
 	dst_words = Mat::zeros(fs.size(), book.rows, CV_32FC1);
 
