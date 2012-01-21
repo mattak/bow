@@ -87,12 +87,13 @@ void ColorPatchFeature::extract (const char *_type, Mat& colorimg) {
   }
 }
 
+const int bin[3]     = {4,4,4};
+const int binstep[3] = {256/bin[0], 256/bin[1], 256/bin[2]};
+
 void ColorPatchFeature::extract (const Mat& img, Mat& colorhist, const int wgrid, const int hgrid) {
   int wstep = img.cols / wgrid;
   int hstep = img.rows / hgrid;
-  int bin[3] = {8,8,8};
-  int binstep[3] = {256/bin[0], 256/bin[1], 256/bin[2]};
-  colorhist = Mat::zeros(wgrid*hgrid,bin[0]+bin[1]+bin[2],CV_32FC1);
+  colorhist = Mat::zeros(wgrid*hgrid,bin[0]*bin[1]*bin[2],CV_32FC1);
   
   rep(yg,hgrid) {
     rep(y,hstep) {
@@ -105,11 +106,12 @@ void ColorPatchFeature::extract (const Mat& img, Mat& colorhist, const int wgrid
                       (uchar)img.data[a+1],
                       (uchar)img.data[a+2]};
           e[0] = e[0]/binstep[0];
-          e[1] = e[1]/binstep[1] + bin[0];
-          e[2] = e[2]/binstep[2] + bin[0] + bin[1];
-          colorhist.at<float>(yg*wgrid+xg, e[0]) += 1.0f;
-          colorhist.at<float>(yg*wgrid+xg, e[1]) += 1.0f;
-          colorhist.at<float>(yg*wgrid+xg, e[2]) += 1.0f;
+          e[1] = e[1]/binstep[1];
+          e[2] = e[2]/binstep[2];
+					int voteidx =	e[0] 
+						+ (e[1] * bin[0]) 
+						+ (e[2] * bin[0] * bin[1]);
+          colorhist.at<float>(yg*wgrid+xg, voteidx) += 1.0f;
         }
       }
     }
@@ -224,16 +226,18 @@ void ColorPatchFeature::show() {
 	for(int i=0;i<keypoint.size();i++){
 		KeyPoint kp = keypoint.at(i);
     int maxbgr[3] = {0,0,0};
-    for (int k=0;k<3;k++) {
-      float max = 0;
-      for (int j=0;j<8;j++) {
-        float d = descriptor.at<float>(i,8*k+j);
-        if (d > max){
-          max = d;
-          maxbgr[k] = j*64+32;
-        }
-      }
-    }
+		int maxidx = 0;
+		float max  = 0;
+		for (int k=0;k<descriptor.cols;k++) {
+			if (max<descriptor.at<float>(i,k)) {
+				max = descriptor.at<float>(i,k);
+				maxidx = k;
+			}
+		}
+		maxbgr[0] = (maxidx%bin[0]) * binstep[0] + binstep[0];
+		maxbgr[1] = ((maxidx/bin[0])%bin[1]) * binstep[1] + binstep[1]/2;
+		maxbgr[2] = (maxidx/(bin[0]*bin[1])) * binstep[2] + binstep[2]/2;
+
     Scalar color = CV_RGB(maxbgr[2],maxbgr[1],maxbgr[0]);
     Scalar rcolor;
     if (maxbgr[0]>=240 && maxbgr[1]>=240 && maxbgr[0]>=240) {
