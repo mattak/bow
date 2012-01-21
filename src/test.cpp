@@ -194,6 +194,24 @@ void save_index_file (Book& book, const char* savefile) {
   idx.save(savefile);
 }
 
+void read_binary_write_plain (int argc, char **argv) {
+	const char* infile  = (argc>1) ? argv[1] : NULL;
+	const char* outfile = (argc>2) ? argv[2] : NULL;
+	if (outfile==NULL) {
+		cerr << "read binary write plain" << endl;
+		cerr << "usage: <infile> <outfile>" << endl;
+		return;
+	}
+	
+	ifstream ifs(infile);
+	ofstream ofs(outfile);
+	Ptr<Feature> f = FeatureFactory::loadFeature(infile);
+	f->set_io_binary(false);
+	ofs << *f;
+	ifs.close();
+	ofs.close();
+}
+
 // feature -> book
 // book -> words
 // 
@@ -203,7 +221,8 @@ int main (int argc, char** argv) {
   // keypoint
   //test_keypointfeature_stdout(argc,argv);
   //test_keypointfeature_stdin(argc,argv);
-  test_colorpatchfeature_stdout(argc,argv);
+  //test_colorpatchfeature_stdout(argc,argv);
+	read_binary_write_plain(argc,argv);
 
   // factory
   //test_featurefactory_stdin(argc,argv);
