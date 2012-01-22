@@ -67,6 +67,9 @@ void ColorPatchFeature::extract (const char *_type, Mat& colorimg) {
   if (subtype == "lab") {
     cvtColor(colorimg, dstimg, CV_BGR2Lab);
   }
+	if (subtype == "luv") {
+		cvtColor(colorimg, dstimg, CV_BGR2Luv);
+	}
   else if (subtype == "hsv") {
     cvtColor(colorimg, dstimg, CV_BGR2HSV);
   }
@@ -569,6 +572,7 @@ Ptr<Feature> FeatureFactory::loadFeature(istream& is) {
   }
   else if (type=="rgb" || type=="grgb"
 			|| type=="lab"	 || type=="glab"
+			|| type=="luv"   || type=="gluv"
 			|| type=="hsv"   || type=="ghsv"
 			|| type=="ycrcb" || type=="gycrcb") {
     feature = new ColorPatchFeature();

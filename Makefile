@@ -13,8 +13,8 @@ _SRC = $(shell ls src)
 SRC  = $(patsubst %,$(SDIR)/%,$(_SRC))
 _OBJ = $(subst .cpp,.o,$(_SRC))
 OBJ  = obj/feature.o obj/book.o obj/util.o #$(patsubst %,$(ODIR)/%,$(_OBJ))
-TARGET = desc cbook cword test
-INSTALL_TARGET = desc cbook cword descall
+TARGET = desc cbook cword test plinear
+INSTALL_TARGET = desc cbook cword descall plinear
 
 all: $(TARGET)
 
@@ -31,6 +31,8 @@ cbook: src/cbook.cpp $(OBJ)
 cword: src/cword.cpp $(OBJ)
 	$(CC) -o $@ $^ $(INC) $(OPS)
 test: src/test.cpp $(OBJ)
+	$(CC) -o $@ $^ $(INC) $(OPS)
+plinear: src/plinear.cpp 
 	$(CC) -o $@ $^ $(INC) $(OPS)
 
 $(OBJ): | $(ODIR)
