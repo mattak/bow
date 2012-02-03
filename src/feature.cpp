@@ -54,6 +54,9 @@ Mat Feature::floated_descriptor() {
 	return descriptor;
 }
 
+const int bin[3]     = {4,4,4};
+const int binstep[3] = {256/bin[0], 256/bin[1], 256/bin[2]};
+
 void ColorPatchFeature::extract (const char *_type, Mat& colorimg) {
   if (colorimg.channels()!=3) {
     cerr << "illeagal channel size" << endl;
@@ -67,31 +70,49 @@ void ColorPatchFeature::extract (const char *_type, Mat& colorimg) {
   if (subtype == "lab") {
     cvtColor(colorimg, dstimg, CV_BGR2Lab);
   }
-	if (subtype == "luv") {
-		cvtColor(colorimg, dstimg, CV_BGR2Luv);
-	}
+  if (subtype == "luv") {
+    cvtColor(colorimg, dstimg, CV_BGR2Luv);
+  }
   else if (subtype == "hsv") {
     cvtColor(colorimg, dstimg, CV_BGR2HSV);
   }
   else if (subtype == "ycrcb") {
     cvtColor(colorimg, dstimg, CV_BGR2YCrCb);
   }
-	if (type.at(0)!='g') {
-		extract(dstimg, descriptor, 1, 1);
-	}
+  
+  if (type.at(0)!='g') {
+    xgrids.push_back(1);
+    ygrids.push_back(1);
+    sgrids.push_back(1);
+  }
+  
+  // alloc
+  int dst_rows = 0;
+  int dst_cols = bin[0]*bin[1]*bin[2];
+  rep (i,xgrids.size()) {
+    dst_rows += xgrids.at(i)*ygrids.at(i);
+  }
+  
+  descriptor = Mat::zeros(dst_rows,dst_cols,CV_32FC1);
+
+  
   if (!xgrids.empty()) {
+    int sy = 0;
     rep (i,xgrids.size()) {
       int wgrid = xgrids.at(i);
       int hgrid = ygrids.at(i);
       Mat tmp;
+
       extract(dstimg, tmp, wgrid, hgrid);
-      descriptor.push_back(tmp);
+
+      for (int y=0;y<tmp.rows;y++,sy++) {
+        rep (x,tmp.cols) {
+          descriptor.at<float>(sy,x) = tmp.at<float>(y,x);
+        }
+      }
     }
   }
 }
-
-const int bin[3]     = {4,4,4};
-const int binstep[3] = {256/bin[0], 256/bin[1], 256/bin[2]};
 
 void ColorPatchFeature::extract (const Mat& img, Mat& colorhist, const int wgrid, const int hgrid) {
   int wstep = img.cols / wgrid;
